@@ -67,6 +67,13 @@ export interface AiTaskPlanRequest {
   goalDescription: string;
   taskCount: number;
   preference: string;
+  model?: string;
+}
+
+export interface AiModel {
+  value: string;
+  label: string;
+  desc: string;
 }
 
 export interface AiPlannedTask {

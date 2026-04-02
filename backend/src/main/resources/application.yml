@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/aistudy?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai}
     username: ${DB_USERNAME:root}          # 默认 root，可通过环境变量 DB_USERNAME 覆盖
-    password: ${DB_PASSWORD:111111}        # 默认 111111，可通过环境变量 DB_PASSWORD 覆盖
+    password: ${DB_PASSWORD:20040821}        # 默认 20040821，可通过环境变量 DB_PASSWORD 覆盖
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       connection-timeout: 30000
@@ -56,9 +56,15 @@ app:
   cors:
     allowed-origins: http://localhost:3000,http://localhost:5173
 
-# DeepSeek AI 配置（已去掉真实密钥，请使用环境变量注入）
+# DeepSeek AI 配置
 deepseek:
-  api-key: ${DEEPSEEK_API_KEY:}                         # 从环境变量 DEEPSEEK_API_KEY 读取，默认空
+  api-key: ${DEEPSEEK_API_KEY:}
   base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com/chat/completions}
   model: ${DEEPSEEK_MODEL:deepseek-chat}
+
+# 通义千问（Qwen）配置 - 优先级高于 DeepSeek
+qwen:
+  api-key: ${QWEN_API_KEY:sk-963419b7c5cc4dadae06e33a2592f6c2}                              # 从环境变量 QWEN_API_KEY 读取
+  base-url: ${QWEN_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
+  model: ${QWEN_MODEL:qwen-turbo}
 

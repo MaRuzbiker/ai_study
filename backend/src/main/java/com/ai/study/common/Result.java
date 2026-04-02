@@ -27,6 +27,15 @@ public class Result<T> {
     // 返回结果对象
         return result;
     }
+    
+/**
+ * 成功响应的静态方法（无数据）
+ * @param <T> 泛型类型
+ * @return 返回一个包含成功状态的结果对象
+ */
+    public static <T> Result<T> success() {
+        return success(null);
+    }
 
 /**
  * 创建一个表示错误结果的通用方法

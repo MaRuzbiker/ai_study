@@ -1,6 +1,8 @@
 package com.ai.study.service.impl;
 
 import com.ai.study.client.DeepSeekClient;
+import com.ai.study.client.QwenClient;
+import com.ai.study.config.QwenProperties;
 import com.ai.study.domain.StudyRecord;
 import com.ai.study.dto.AiTaskPlanRequest;
 import com.ai.study.dto.AiTaskPlanResponse;
@@ -22,21 +24,41 @@ import java.util.stream.Collectors;
 public class AiServiceImpl implements AiService {
 
     private final DeepSeekClient deepSeekClient;
+    private final QwenClient qwenClient;
+    private final QwenProperties qwenProperties;
     private final StudyRecordService studyRecordService;
     private final ObjectMapper objectMapper;
 
-    // 每周建议核心代码
+    /**
+     * 根据配置自动选择 AI 客户端
+     * model 参数可覆盖默认配置
+     */
+    private String callAi(String prompt, String model) {
+        String qwenKey = qwenProperties.getApiKey();
+        log.debug("Qwen API Key 配置: {}", qwenKey != null ? (qwenKey.length() > 10 ? qwenKey.substring(0, 10) + "..." : "已配置") : "未配置");
+        
+        // 优先使用千问（如果配置了 API Key）
+        if (qwenKey != null && !qwenKey.isEmpty()) {
+            log.info("使用通义千问 AI, model={}", model);
+            return qwenClient.chat(prompt, model);
+        }
+        
+        // 千问未配置，尝试 DeepSeek
+        log.info("千问未配置，尝试使用 DeepSeek AI");
+        return deepSeekClient.chat(prompt);
+    }
+
+    private String callAi(String prompt) {
+        return callAi(prompt, null);
+    }
+
     @Override
-    public String generateWeeklySuggestion(Long userId) {
-        // 1. 确定时间范围：近7天（从6天前到今天）
+    public String generateWeeklySuggestion(Long userId, String model) {
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(6);
 
-        // 2. 调用学习记录服务，查询该用户在时间范围内的记录
-        // 结果返回 List<StudyRecord> 类型
         List<StudyRecord> records = studyRecordService.listByUserAndDateRange(userId, start, end);
 
-        // 3. 将 List 中的数据格式化为自然语言（供AI理解）
         String dataset = records.isEmpty()
                 ? "最近 7 天没有任何学习记录。"
                 : records.stream()
@@ -51,12 +73,12 @@ public class AiServiceImpl implements AiService {
                 - 结合「今日任务完成情况」和「全部学习任务总体完成度」这两个维度，给出具体可执行的优化建议，\
                   包括今天之后 3~5 天应该如何安排学习任务；\n\
                 - 输出结构建议包含：本周学习情况总结、当前任务完成度分析、下一步行动建议三个小节。\n\
-                请用中文回答，语气鼓励、具体，不要出现“打卡”两个字。\n\
+                请用中文回答，语气鼓励、具体，不要出现"打卡"两个字。\n\
                 最近 7 天的学习记录如下：
                 %s
                 """.formatted(dataset);
 
-        return deepSeekClient.chat(prompt);
+        return callAi(prompt, model);
     }
 
     @Override
@@ -81,12 +103,9 @@ public class AiServiceImpl implements AiService {
                 request.getTaskCount(),
                 request.getPreference() == null ? "未提供" : request.getPreference());
 
-        String responseText = deepSeekClient.chat(prompt);
+        String responseText = callAi(prompt, request.getModel());
         try {
-            // 清理响应文本，移除可能的 markdown 代码块标记
             String cleanedText = responseText.trim();
-
-            // 移除 ```json 和 ``` 标记
             if (cleanedText.startsWith("```json")) {
                 cleanedText = cleanedText.substring(7).trim();
             } else if (cleanedText.startsWith("```")) {
@@ -95,26 +114,19 @@ public class AiServiceImpl implements AiService {
             if (cleanedText.endsWith("```")) {
                 cleanedText = cleanedText.substring(0, cleanedText.length() - 3).trim();
             }
-
-            // 尝试查找 JSON 对象
             int jsonStart = cleanedText.indexOf("{");
             int jsonEnd = cleanedText.lastIndexOf("}");
             if (jsonStart >= 0 && jsonEnd > jsonStart) {
                 cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
             }
-
             log.debug("清理后的 JSON 文本: {}", cleanedText);
-
             AiTaskPlanResponse result = objectMapper.readValue(cleanedText, AiTaskPlanResponse.class);
-
-            // 验证结果
             if (result.getTasks() == null || result.getTasks().isEmpty()) {
                 log.warn("AI 返回的任务列表为空");
                 result.setTasks(Collections.emptyList());
             } else {
                 log.info("成功解析 {} 个任务", result.getTasks().size());
             }
-
             return result;
         } catch (Exception e) {
             log.error("解析 AI 任务计划失败，原始响应: {}", responseText, e);
@@ -124,6 +136,9 @@ public class AiServiceImpl implements AiService {
             return fallback;
         }
     }
+    
+    @Override
+    public String chat(String question) {
+        return callAi(question);
+    }
 }
-
-

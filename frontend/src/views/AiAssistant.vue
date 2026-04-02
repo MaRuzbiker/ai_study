@@ -8,15 +8,27 @@
             <div class="card-header">
               <span>AI 学习建议</span>
               <div class="header-actions">
-                <el-button size="small" @click="showHistory = !showHistory">
-                  {{ showHistory ? '隐藏历史' : '查看历史' }}
+                <el-button size="small" @click="showPlanHistoryInLeft = !showPlanHistoryInLeft">
+                  {{ showPlanHistoryInLeft ? '隐藏计划' : '计划历史' }}
                 </el-button>
-                <el-button size="small" @click="loadSuggestion" :loading="suggestionLoading">
+                <el-button size="small" @click="showHistory = !showHistory">
+                  {{ showHistory ? '隐藏' : '历史' }}
+                </el-button>
+                <el-button size="small" type="primary" @click="loadSuggestion" :loading="suggestionLoading">
                   重新生成
                 </el-button>
               </div>
             </div>
           </template>
+
+          <!-- 模型选择 -->
+          <div class="model-selector">
+            <el-radio-group v-model="suggestionModel" size="small">
+              <el-radio-button v-for="m in aiModels" :key="m.value" :value="m.value">
+                {{ m.label }}
+              </el-radio-button>
+            </el-radio-group>
+          </div>
 
           <!-- 建议历史记录 -->
           <div v-if="showHistory && suggestionHistory.length > 0" class="history-list">
@@ -32,7 +44,22 @@
             </div>
           </div>
 
-          <div class="suggestion-content" :class="{ 'with-history': showHistory && suggestionHistory.length > 0 }">
+          <!-- 任务计划历史 -->
+          <div v-if="showPlanHistoryInLeft && planHistory.length > 0" class="history-list plan-history">
+            <div class="history-section-title">📋 任务计划历史</div>
+            <div
+              v-for="(item, index) in planHistory"
+              :key="'plan-' + index"
+              class="history-item"
+              :class="{ active: index === currentPlanHistoryIndexInLeft }"
+              @click="loadPlanToLeft(index)"
+            >
+              <div class="history-time">{{ item.time }}</div>
+              <div class="history-preview">任务数：{{ item.tasksCount }} ｜ {{ item.summary || '无摘要' }}</div>
+            </div>
+          </div>
+
+          <div class="suggestion-content" :class="{ 'with-history': (showHistory && suggestionHistory.length > 0) || (showPlanHistoryInLeft && planHistory.length > 0) }">
             <div v-if="suggestion" class="suggestion-text">{{ suggestion }}</div>
             <el-empty v-else description="点击重新生成获取学习建议" />
           </div>
@@ -89,6 +116,19 @@
                 v-model="planForm.preference"
                 placeholder="例如：擅长后端开发，喜欢实践项目"
               />
+            </el-form-item>
+            <el-form-item label="AI 模型">
+              <el-radio-group v-model="planForm.model" class="model-radio-group">
+                <el-radio-button 
+                  v-for="m in aiModels" 
+                  :key="m.value" 
+                  :value="m.value"
+                >
+                  <el-tooltip :content="m.desc" placement="top">
+                    <span>{{ m.label }}</span>
+                  </el-tooltip>
+                </el-radio-button>
+              </el-radio-group>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="generatePlan" :loading="planLoading">
@@ -150,9 +190,9 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted, watch } from 'vue';
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus';
-import { getWeeklySuggestion, generateTaskPlan } from '@/api/ai';
+import { getWeeklySuggestion, generateTaskPlan, getAvailableModels } from '@/api/ai';
 import { createTask } from '@/api/task';
-import type { AiTaskPlanRequest, AiTaskPlanResponse, AiPlannedTask } from '@/types/api';
+import type { AiTaskPlanRequest, AiTaskPlanResponse, AiPlannedTask, AiModel } from '@/types/api';
 
 // 本地存储 key
 const STORAGE_SUGGESTION_HISTORY = 'ai_suggestion_history';
@@ -171,6 +211,10 @@ const currentHistoryIndex = ref(-1);
 const showPlanHistory = ref(false);
 const currentPlanHistoryIndex = ref(-1);
 
+// 左侧显示任务计划历史
+const showPlanHistoryInLeft = ref(false);
+const currentPlanHistoryIndexInLeft = ref(-1);
+
 interface SuggestionHistoryItem {
   time: string;
   content: string;
@@ -187,10 +231,20 @@ interface PlanHistoryItem {
 
 const planHistory = ref<PlanHistoryItem[]>([]);
 
+const aiModels = ref<AiModel[]>([
+  { value: 'qwen-turbo', label: '千问 Turbo', desc: '快速便宜，适合日常使用' },
+  { value: 'qwen-plus', label: '千问 Plus', desc: '均衡推荐，能力更强' },
+  { value: 'qwen-max', label: '千问 Max', desc: '最强能力，复杂任务首选' }
+]);
+
+// 学习建议的模型选择
+const suggestionModel = ref('qwen-turbo');
+
 const planForm = reactive<AiTaskPlanRequest>({
   goalDescription: '',
   taskCount: 5,
-  preference: ''
+  preference: '',
+  model: 'qwen-turbo'
 });
 
 const planRules = {
@@ -226,7 +280,7 @@ const loadHistorySuggestion = (index: number) => {
 const loadSuggestion = async () => {
   suggestionLoading.value = true;
   try {
-    const res = await getWeeklySuggestion();
+    const res = await getWeeklySuggestion(suggestionModel.value);
     if (res.code === 0) {
       suggestion.value = res.data;
       saveSuggestionHistory();
@@ -267,6 +321,24 @@ const loadPlanFromHistory = (index: number) => {
   localStorage.setItem(STORAGE_PLAN_CURRENT, JSON.stringify(planResult.value));
 };
 
+// 将任务计划显示在左侧建议区域
+const loadPlanToLeft = (index: number) => {
+  if (index < 0 || index >= planHistory.value.length) return;
+  currentPlanHistoryIndexInLeft.value = index;
+  const plan = planHistory.value[index].data;
+  // 将任务计划转换为建议文本格式
+  let text = `# ${plan.summary || '任务计划'}\n\n`;
+  if (plan.tasks && plan.tasks.length > 0) {
+    text += '## 任务列表\n\n';
+    plan.tasks.forEach((task, i) => {
+      text += `${i + 1}. **${task.title}**\n   - ${task.description}\n   - 建议时长: ${task.suggestedHours} 小时\n\n`;
+    });
+  }
+  suggestion.value = text;
+  saveSuggestionHistory();
+  ElMessage.success('已加载任务计划到建议区');
+};
+
 const generatePlan = async () => {
   if (!planFormRef.value) return;
   await planFormRef.value.validate(async (valid: boolean) => {
@@ -294,6 +366,7 @@ const clearPlan = () => {
   planForm.goalDescription = '';
   planForm.taskCount = 5;
   planForm.preference = '';
+  planForm.model = 'qwen-turbo';
   planResult.value = null;
   planFormRef.value?.clearValidate();
   localStorage.removeItem(STORAGE_PLAN_CURRENT);
@@ -424,10 +497,22 @@ onMounted(() => {
       planForm.goalDescription = saved.goalDescription || '';
       planForm.taskCount = saved.taskCount || 5;
       planForm.preference = saved.preference || '';
+      planForm.model = saved.model || 'qwen-turbo';
     } catch {
       // ignore
     }
   }
+
+  // 从后端加载模型列表
+  getAvailableModels()
+    .then(modelRes => {
+      if (modelRes.code === 0 && modelRes.data) {
+        aiModels.value = modelRes.data;
+      }
+    })
+    .catch(() => {
+      // 使用默认模型列表
+    });
 });
 
 // 实时保存表单
@@ -510,6 +595,15 @@ watch(
   color: #e5e7eb;
 }
 
+.history-section-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #60a5fa;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+}
+
 .plan-history {
   margin-bottom: 12px;
 }
@@ -577,6 +671,37 @@ watch(
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.model-selector {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.model-selector :deep(.el-radio-button__inner) {
+  padding: 6px 12px;
+}
+
+.model-radio-group {
+  display: flex;
+  gap: 8px;
+}
+
+.model-radio-group :deep(.el-radio-button__inner) {
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.model-radio-group :deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-radius: 6px;
+}
+
+.model-radio-group :deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-radius: 6px;
+}
+
+.model-radio-group :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3);
 }
 </style>
 

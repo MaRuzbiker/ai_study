@@ -15,6 +15,12 @@ public class AiTaskPlanRequest {
     private Integer taskCount;
 
     private String preference;
+    
+    /**
+     * AI 模型选择: qwen-turbo(快速便宜) / qwen-plus(均衡) / qwen-max(最强)
+     * 默认使用 qwen-turbo
+     */
+    private String model;
 }
 
 

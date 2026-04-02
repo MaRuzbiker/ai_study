@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai.study.mapper.WrongQuestionMapper">
+
+    <resultMap id="WrongQuestionResult" type="com.ai.study.domain.WrongQuestion">
+        <id property="id" column="id"/>
+        <result property="question" column="question"/>
+        <result property="answer" column="answer"/>
+        <result property="subject" column="subject"/>
+        <result property="knowledgePoint" column="knowledge_point"/>
+        <result property="userId" column="user_id"/>
+        <result property="mastered" column="mastered"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ai.study.domain.WrongQuestion">
+        INSERT INTO wrong_question (question, answer, subject, knowledge_point, user_id, mastered, created_at, updated_at)
+        VALUES (#{question}, #{answer}, #{subject}, #{knowledgePoint}, #{userId}, #{mastered}, #{createdAt}, #{updatedAt})
+        <selectKey resultType="Long" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <select id="selectById" parameterType="Long" resultMap="WrongQuestionResult">
+        SELECT * FROM wrong_question WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="WrongQuestionResult">
+        SELECT * FROM wrong_question
+        WHERE user_id = #{userId}
+        <if test="subject != null and subject != ''">
+            AND subject = #{subject}
+        </if>
+        <if test="mastered != null">
+            AND mastered = #{mastered}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="update" parameterType="com.ai.study.domain.WrongQuestion">
+        UPDATE wrong_question
+        SET question = #{question},
+            answer = #{answer},
+            subject = #{subject},
+            knowledge_point = #{knowledgePoint},
+            mastered = #{mastered},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="Long">
+        DELETE FROM wrong_question WHERE id = #{id}
+    </delete>
+
+    <select id="countAll" parameterType="Long" resultType="int">
+        SELECT COUNT(*) FROM wrong_question WHERE user_id = #{userId}
+    </select>
+
+    <select id="countMastered" parameterType="Long" resultType="int">
+        SELECT COUNT(*) FROM wrong_question WHERE user_id = #{userId} AND mastered = true
+    </select>
+
+    <select id="countBySubject" parameterType="Long" resultType="map">
+        SELECT subject, COUNT(*) as count FROM wrong_question 
+        WHERE user_id = #{userId} GROUP BY subject
+    </select>
+</mapper>

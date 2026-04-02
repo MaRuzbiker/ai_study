@@ -39,7 +39,7 @@ instance.interceptors.response.use(
   }
 );
 
-export function get<T>(url: string, params?: unknown): Promise<ApiResponse<T>> {
+export function get<T>(url: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
   return instance.get<ApiResponse<T>>(url, { params }).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
 }
 
