@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai.study.mapper.WordBookMapper">
+    <select id="selectAll" resultType="com.ai.study.domain.WordBook">
+        SELECT id, name, category, description, word_count AS wordCount, create_time AS createTime
+        FROM word_book
+        ORDER BY id
+    </select>
+
+    <select id="selectById" resultType="com.ai.study.domain.WordBook">
+        SELECT id, name, category, description, word_count AS wordCount, create_time AS createTime
+        FROM word_book WHERE id = #{id}
+    </select>
+
+    <update id="updateWordCount">
+        UPDATE word_book SET word_count = #{count} WHERE id = #{id}
+    </update>
+</mapper>

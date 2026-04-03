@@ -11,6 +11,8 @@ const TaskList = () => import('@/views/TaskList.vue')
 const RecordList = () => import('@/views/RecordList.vue')
 const AiAssistant = () => import('@/views/AiAssistant.vue')
 const Achievements = () => import('@/views/Achievements.vue')
+const WordMemorize = () => import('@/views/WordMemorize.vue')
+const WrongBook = () => import('@/views/WrongBook.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -64,6 +66,18 @@ const routes: RouteRecordRaw[] = [
         path: 'achievements',
         name: 'Achievements',
         component: Achievements,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'words',
+        name: 'WordMemorize',
+        component: WordMemorize,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'wrong-book',
+        name: 'WrongBook',
+        component: WrongBook,
         meta: { requiresAuth: true }
       }
     ]

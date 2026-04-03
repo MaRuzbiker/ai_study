@@ -11,7 +11,7 @@ spring:
   application:
     name: ai-study
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/aistudy?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/aistudy?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai}
     username: ${DB_USERNAME:root}          # 默认 root，可通过环境变量 DB_USERNAME 覆盖
     password: ${DB_PASSWORD:20040821}        # 默认 20040821，可通过环境变量 DB_PASSWORD 覆盖
     driver-class-name: com.mysql.cj.jdbc.Driver

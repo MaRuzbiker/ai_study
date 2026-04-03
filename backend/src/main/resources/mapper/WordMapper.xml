@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai.study.mapper.WordMapper">
+    <select id="selectByBookId" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word WHERE book_id = #{bookId}
+        ORDER BY sort_order
+    </select>
+
+    <select id="selectRandomWords" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word WHERE book_id = #{bookId}
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectById" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word WHERE id = #{id}
+    </select>
+</mapper>

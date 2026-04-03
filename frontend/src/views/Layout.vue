@@ -26,6 +26,12 @@
         <el-menu-item index="/achievements">
           <span>学习成就</span>
         </el-menu-item>
+        <el-menu-item index="/words">
+          <span>📚 背单词</span>
+        </el-menu-item>
+        <el-menu-item index="/wrong-book">
+          <span>📝 错词本</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
