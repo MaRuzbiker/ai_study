@@ -1,17 +1,17 @@
 <template>
   <div class="wrong-book-page">
-    <div class="bg-gradient"></div>
-
+    <!-- 顶部 -->
     <header class="page-header">
       <button class="back-btn" @click="$router.push('/words')">
         <i class="el-icon-arrow-left"></i>
       </button>
-      <h1 class="page-title">Wrong Words</h1>
+      <h1 class="page-title">我的错词本</h1>
       <button class="clear-btn" @click="confirmClear" :disabled="wrongWords.length === 0">
-        <i class="el-icon-delete"></i> Clear
+        <i class="el-icon-delete"></i> 清空
       </button>
     </header>
 
+    <!-- 词书筛选 -->
     <div class="filter-section">
       <div class="book-tabs">
         <button
@@ -26,17 +26,19 @@
       </div>
     </div>
 
+    <!-- 统计 -->
     <div v-if="wrongWords.length > 0" class="stats-bar">
       <div class="stat-item">
         <span class="stat-num">{{ wrongWords.length }}</span>
-        <span class="stat-label">Wrong Words</span>
+        <span class="stat-label">错词数</span>
       </div>
       <div class="stat-item">
         <span class="stat-num">{{ totalWrong }}</span>
-        <span class="stat-label">Total Wrong</span>
+        <span class="stat-label">总错误次数</span>
       </div>
     </div>
 
+    <!-- 错词列表 -->
     <div v-if="wrongWords.length > 0" class="word-list">
       <div
         v-for="item in wrongWords"
@@ -52,24 +54,26 @@
         <div class="word-stats">
           <div class="stat-badge wrong">
             <span class="num">{{ item.wrongCount }}</span>
-            <span class="label">Wrong</span>
+            <span class="label">错</span>
           </div>
           <div class="stat-badge correct">
             <span class="num">{{ item.correctCount }}</span>
-            <span class="label">Correct</span>
+            <span class="label">对</span>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 空状态 -->
     <div v-else class="empty-state">
       <div class="empty-icon">🎉</div>
-      <div class="empty-text">Great job! No wrong words.</div>
+      <div class="empty-text">太棒了！暂无错词</div>
       <button class="start-learn-btn" @click="$router.push('/words')">
-        Go Learn
+        去背单词
       </button>
     </div>
 
+    <!-- 详情弹窗 -->
     <div v-if="showDetailModal" class="modal-overlay" @click="showDetailModal = false">
       <div class="detail-modal" @click.stop>
         <div class="detail-word">{{ currentItem.word }}</div>
@@ -79,24 +83,21 @@
         <div class="detail-stats">
           <div class="detail-stat">
             <span class="ds-num">{{ currentItem.wrongCount }}</span>
-            <span class="ds-label">Wrong</span>
+            <span class="ds-label">错误</span>
           </div>
           <div class="detail-stat">
             <span class="ds-num">{{ currentItem.correctCount }}</span>
-            <span class="ds-label">Correct</span>
+            <span class="ds-label">正确</span>
           </div>
         </div>
 
         <div class="detail-actions">
           <button class="master-btn" @click="markMastered">
-            <i class="el-icon-check"></i> Mastered
-          </button>
-          <button class="practice-btn" @click="practiceWord">
-            <i class="el-icon-refresh"></i> Practice
+            <i class="el-icon-check"></i> 已掌握
           </button>
         </div>
 
-        <button class="close-detail-btn" @click="showDetailModal = false">Close</button>
+        <button class="close-detail-btn" @click="showDetailModal = false">关闭</button>
       </div>
     </div>
   </div>
@@ -161,79 +162,83 @@ const showDetail = (item: WrongWord) => {
 const markMastered = async () => {
   try {
     await del('/words/wrong-book/' + currentItem.value.wordId);
-    ElMessage.success('Word mastered!');
+    ElMessage.success('恭喜掌握了这个单词！');
     showDetailModal.value = false;
     loadWrongWords();
-  } catch (e) { ElMessage.error('Operation failed'); }
-};
-
-const practiceWord = () => {
-  showDetailModal.value = false;
-  ElMessage.info('Practice feature coming soon');
+  } catch (e) { ElMessage.error('操作失败'); }
 };
 
 const confirmClear = async () => {
   if (wrongWords.value.length === 0) return;
   try {
-    await ElMessageBox.confirm('Clear all wrong words for this book?', 'Confirm', {
-      confirmButtonText: 'Clear',
-      cancelButtonText: 'Cancel',
+    await ElMessageBox.confirm('确定要清空当前词书的错词吗？', '清空确认', {
+      confirmButtonText: '确定清空',
+      cancelButtonText: '取消',
       type: 'warning'
     });
     await del('/words/wrong-book/clear/' + selectedBookId.value);
-    ElMessage.success('Cleared!');
+    ElMessage.success('已清空错词');
     loadWrongWords();
-  } catch (e) { /* cancel */ }
+  } catch (e) { /* 取消 */ }
 };
 
 onMounted(() => { loadBooks(); });
 </script>
 
 <style scoped>
-.wrong-book-page { min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding-bottom: 40px; }
-.bg-gradient { position: fixed; inset: 0; z-index: 0; }
-.page-header { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
-.back-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.page-title { font-size: 20px; font-weight: bold; color: white; }
-.clear-btn { padding: 8px 14px; background: rgba(255,255,255,0.2); border: none; border-radius: 20px; color: white; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.wrong-book-page { min-height: 100%; background: transparent; padding-bottom: 20px; }
+
+/* 顶部 */
+.page-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; margin-bottom: 12px; }
+.back-btn { width: 36px; height: 36px; border-radius: 50%; background: #f5f5f5; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.page-title { font-size: 18px; font-weight: bold; color: #303133; }
+.clear-btn { padding: 8px 14px; background: #fef0f0; color: #f56c6c; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
 .clear-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.filter-section { position: relative; z-index: 10; padding: 0 20px 16px; }
+
+/* 词书切换 */
+.filter-section { margin-bottom: 12px; }
 .book-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.book-tab { padding: 8px 16px; background: rgba(255,255,255,0.2); border: 2px solid transparent; border-radius: 20px; color: white; font-size: 13px; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
-.book-tab.active { background: white; color: #667eea; border-color: white; }
-.stats-bar { position: relative; z-index: 10; display: flex; gap: 16px; padding: 0 20px 16px; }
-.stat-item { flex: 1; background: white; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.stat-num { display: block; font-size: 28px; font-weight: bold; color: #667eea; }
-.stat-label { font-size: 12px; color: #9ca3af; }
-.word-list { position: relative; z-index: 10; padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
-.word-card { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
+.book-tab { padding: 6px 14px; background: #f5f5f5; border: 2px solid transparent; border-radius: 16px; color: #606266; font-size: 13px; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+.book-tab.active { background: #667eea; color: white; border-color: #667eea; }
+
+/* 统计 */
+.stats-bar { display: flex; gap: 12px; margin-bottom: 12px; }
+.stat-item { flex: 1; background: white; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.stat-num { display: block; font-size: 24px; font-weight: bold; color: #667eea; }
+.stat-label { font-size: 12px; color: #909399; }
+
+/* 错词列表 */
+.word-list { display: flex; flex-direction: column; gap: 10px; }
+.word-card { background: white; border-radius: 12px; padding: 14px; display: flex; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.2s; }
 .word-card:hover { transform: translateY(-2px); }
 .word-main { flex: 1; }
-.word-text { font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
-.word-phonetic { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
-.word-meaning { font-size: 14px; color: #667eea; }
-.word-stats { display: flex; gap: 8px; }
-.stat-badge { padding: 8px 12px; border-radius: 10px; text-align: center; min-width: 44px; }
-.stat-badge .num { display: block; font-size: 18px; font-weight: bold; }
-.stat-badge .label { font-size: 11px; }
-.stat-badge.wrong { background: #fee2e2; color: #dc2626; }
-.stat-badge.correct { background: #d1fae5; color: #059669; }
-.empty-state { position: relative; z-index: 10; text-align: center; padding-top: 80px; }
-.empty-icon { font-size: 80px; margin-bottom: 16px; }
-.empty-text { font-size: 20px; color: white; font-weight: bold; margin-bottom: 24px; }
-.start-learn-btn { padding: 14px 32px; background: white; color: #667eea; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
-.detail-modal { background: white; border-radius: 24px; padding: 32px; width: 90%; max-width: 380px; text-align: center; }
-.detail-word { font-size: 40px; font-weight: bold; color: #1f2937; margin-bottom: 6px; }
-.detail-phonetic { font-size: 16px; color: #9ca3af; margin-bottom: 12px; }
-.detail-meaning { font-size: 22px; color: #667eea; margin-bottom: 24px; }
-.detail-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
+.word-text { font-size: 18px; font-weight: bold; color: #303133; margin-bottom: 3px; }
+.word-phonetic { font-size: 12px; color: #909399; margin-bottom: 3px; }
+.word-meaning { font-size: 13px; color: #667eea; }
+.word-stats { display: flex; gap: 6px; }
+.stat-badge { padding: 6px 10px; border-radius: 8px; text-align: center; min-width: 36px; }
+.stat-badge .num { display: block; font-size: 16px; font-weight: bold; }
+.stat-badge .label { font-size: 10px; }
+.stat-badge.wrong { background: #fef0f0; color: #f56c6c; }
+.stat-badge.correct { background: #f0f9eb; color: #67c23a; }
+
+/* 空状态 */
+.empty-state { text-align: center; padding-top: 60px; }
+.empty-icon { font-size: 60px; margin-bottom: 12px; }
+.empty-text { font-size: 16px; color: #909399; margin-bottom: 20px; }
+.start-learn-btn { padding: 12px 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+
+/* 详情弹窗 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.detail-modal { background: white; border-radius: 20px; padding: 28px; width: 90%; max-width: 340px; text-align: center; }
+.detail-word { font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 4px; }
+.detail-phonetic { font-size: 14px; color: #909399; margin-bottom: 10px; }
+.detail-meaning { font-size: 18px; color: #667eea; margin-bottom: 20px; line-height: 1.5; }
+.detail-stats { display: flex; justify-content: center; gap: 28px; margin-bottom: 20px; }
 .detail-stat { text-align: center; }
-.ds-num { display: block; font-size: 28px; font-weight: bold; color: #667eea; }
-.ds-label { font-size: 12px; color: #9ca3af; }
-.detail-actions { display: flex; gap: 12px; margin-bottom: 16px; }
-.master-btn, .practice-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.master-btn { background: #10b981; color: white; }
-.practice-btn { background: #f3f4f6; color: #4b5563; }
-.close-detail-btn { width: 100%; padding: 12px; background: #f3f4f6; border: none; border-radius: 10px; color: #6b7280; font-size: 14px; cursor: pointer; }
+.ds-num { display: block; font-size: 24px; font-weight: bold; color: #667eea; }
+.ds-label { font-size: 12px; color: #909399; }
+.detail-actions { margin-bottom: 16px; }
+.master-btn { width: 100%; padding: 12px; background: #67c23a; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.close-detail-btn { width: 100%; padding: 10px; background: #f5f5f5; border: none; border-radius: 8px; color: #606266; font-size: 14px; cursor: pointer; }
 </style>

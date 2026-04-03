@@ -1,21 +1,21 @@
 <template>
   <div class="word-page">
-    <!-- Top Bar -->
+    <!-- 顶部栏 -->
     <div class="top-bar">
       <div class="top-bar-left">
-        <span class="app-title">Word Master</span>
+        <span class="app-title">背单词</span>
       </div>
       <div class="top-bar-right">
-        <button class="icon-btn" @click="openSettings">
+        <button class="icon-btn" @click="openSettings" title="设置">
           <i class="el-icon-setting"></i>
         </button>
       </div>
     </div>
 
-    <!-- Welcome View -->
+    <!-- 欢迎界面 -->
     <div v-if="!showLearning" class="welcome-section">
       <div class="progress-card">
-        <div class="progress-label">Today's Progress</div>
+        <div class="progress-label">今日学习进度</div>
         <div class="progress-row">
           <span class="current">{{ learnedToday }}</span>
           <span class="sep">/</span>
@@ -24,85 +24,98 @@
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
-        <div class="remaining">{{ remainingCount }} words remaining</div>
+        <div class="remaining">剩余 {{ remainingCount }} 个单词</div>
       </div>
 
       <button class="start-btn" @click="startLearning">
-        <i class="el-icon-video-play"></i> Start Learning
+        <i class="el-icon-video-play"></i> 开始学习
       </button>
 
       <button class="wrong-btn" @click="$router.push('/wrong-book')">
-        <i class="el-icon-document"></i> Wrong Words ({{ wrongCount }})
+        <i class="el-icon-document"></i> 我的错词本 ({{ wrongCount }})
       </button>
     </div>
 
-    <!-- Learning View -->
+    <!-- 学习界面 -->
     <div v-else class="learning-section">
-      <!-- Progress Bar -->
+      <!-- 进度条 -->
       <div class="learn-progress">
-        <span>Progress: {{ learnedToday }}/{{ dailyGoal }}</span>
-        <span>{{ remainingCount }} left</span>
+        <span>进度: {{ learnedToday }}/{{ dailyGoal }}</span>
+        <span>剩余 {{ remainingCount }}</span>
       </div>
 
-      <!-- Word Card -->
+      <!-- 单词卡片 -->
       <div class="word-card">
+        <!-- 显示单词和音标 -->
         <div class="word-text">{{ currentWord.word }}</div>
+        <div v-if="currentWord.phonetic" class="phonetic-text">{{ currentWord.phonetic }}</div>
+        
+        <!-- 显示释义 -->
         <div v-if="showMeaning" class="meaning-text">{{ currentWord.meaning }}</div>
-        <div v-if="showMeaning && currentWord.phonetic" class="phonetic-text">{{ currentWord.phonetic }}</div>
 
-        <button v-if="!showMeaning" class="reveal-btn" @click="showMeaning = true">
-          Show Meaning
+        <!-- 显示答案按钮 -->
+        <button v-if="!showMeaning && currentMode === 'flashcard'" class="reveal-btn" @click="showMeaning = true">
+          显示释义
         </button>
 
-        <!-- Mode: Flashcard -->
+        <!-- 闪卡模式：认识/不认识 -->
         <template v-if="currentMode === 'flashcard' && showMeaning">
           <div class="action-row">
-            <button class="unk-btn" @click="markUnknown">Don't Know</button>
-            <button class="knw-btn" @click="markKnown">Know It</button>
+            <button class="unk-btn" @click="markUnknown">不认识</button>
+            <button class="knw-btn" @click="markKnown">认识</button>
           </div>
         </template>
 
-        <!-- Mode: Fill Blank -->
+        <!-- 填空模式 -->
         <template v-if="currentMode === 'fillBlank'">
           <div class="hint-text">
-            Hint: first letter <span class="hl">{{ currentWord.word.charAt(0).toUpperCase() }}</span>,
-            {{ currentWord.word.length }} letters
+            提示：首字母 <span class="hl">{{ currentWord.word.charAt(0).toUpperCase() }}</span>，
+            共 {{ currentWord.word.length }} 个字母
           </div>
           <input
             v-model="fillBlankAnswer"
             class="answer-input"
-            :placeholder="fillBlankChecked ? '' : 'Type the word'"
+            :placeholder="fillBlankChecked ? '' : '请输入单词'"
             :disabled="fillBlankChecked"
             @keyup.enter="checkFillBlank"
           />
           <div v-if="fillBlankChecked" class="feedback" :class="fillBlankCorrect ? 'ok' : 'err'">
-            {{ fillBlankCorrect ? 'Correct!' : 'Answer: ' + currentWord.word }}
+            {{ fillBlankCorrect ? '正确！' : '正确答案：' + currentWord.word }}
           </div>
-          <button class="check-btn" @click="checkFillBlank">
-            {{ fillBlankChecked ? 'Next' : 'Check' }}
+          <div v-if="fillBlankChecked" class="action-row">
+            <button class="unk-btn" @click="markUnknown">不认识</button>
+            <button class="knw-btn" @click="markKnown">认识</button>
+          </div>
+          <button v-else class="check-btn" @click="checkFillBlank">
+            检查
           </button>
         </template>
 
-        <!-- Mode: Spelling -->
+        <!-- 拼写模式 -->
         <template v-if="currentMode === 'spelling'">
           <div class="meaning-display">{{ currentWord.meaning }}</div>
+          <div class="spelling-tip">请根据释义拼写单词</div>
           <input
             v-model="spellingAnswer"
             class="answer-input"
-            :placeholder="spellingChecked ? '' : 'Spell the word'"
+            :placeholder="spellingChecked ? '' : '请拼写单词'"
             :disabled="spellingChecked"
             @keyup.enter="checkSpelling"
           />
           <div v-if="spellingChecked" class="feedback" :class="spellingCorrect ? 'ok' : 'err'">
-            {{ spellingCorrect ? 'Correct!' : 'Answer: ' + currentWord.word }}
+            {{ spellingCorrect ? '正确！' : '正确答案：' + currentWord.word }}
           </div>
-          <button class="check-btn" @click="checkSpelling">
-            {{ spellingChecked ? 'Next' : 'Check' }}
+          <div v-if="spellingChecked" class="action-row">
+            <button class="unk-btn" @click="markUnknown">不认识</button>
+            <button class="knw-btn" @click="markKnown">认识</button>
+          </div>
+          <button v-else class="check-btn" @click="checkSpelling">
+            检查
           </button>
         </template>
       </div>
 
-      <!-- Mode Switcher -->
+      <!-- 模式切换 -->
       <div class="mode-bar">
         <button
           v-for="m in modes"
@@ -116,41 +129,37 @@
       </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- 设置弹窗 -->
     <div v-if="showSettings" class="modal-mask" @click="showSettings = false">
       <div class="modal" @click.stop>
         <div class="modal-hd">
-          <span>Settings</span>
-          <button class="x-btn" @click="showSettings = false">x</button>
+          <span>设置</span>
+          <button class="x-btn" @click="showSettings = false">×</button>
         </div>
         <div class="modal-bd">
           <div class="field">
-            <label>Daily Goal (words)</label>
+            <label>每日学习目标（个）</label>
             <input v-model.number="settings.dailyGoal" type="number" min="1" max="200" />
           </div>
           <div class="field">
-            <label>Reminder Time</label>
+            <label>提醒时间</label>
             <input v-model="settings.reminderTime" type="time" />
-          </div>
-          <div class="field">
-            <label>Rest (minutes)</label>
-            <input v-model.number="settings.restDuration" type="number" min="1" max="60" />
           </div>
         </div>
         <div class="modal-ft">
-          <button class="cancel-btn" @click="showSettings = false">Cancel</button>
-          <button class="save-btn" @click="saveSettings">Save</button>
+          <button class="cancel-btn" @click="showSettings = false">取消</button>
+          <button class="save-btn" @click="saveSettings">保存</button>
         </div>
       </div>
     </div>
 
-    <!-- Toast -->
+    <!-- Toast 提示 -->
     <div v-if="toast.show" class="toast-msg">{{ toast.message }}</div>
 
-    <!-- Fireworks -->
+    <!-- 庆祝动画 -->
     <div v-if="showFireworks" class="fireworks">
-      <div class="congrats">Goal Achieved!</div>
-      <button class="close-fireworks" @click="showFireworks = false">x</button>
+      <div class="congrats">🎉 恭喜达成今日目标！🎉</div>
+      <button class="close-fireworks" @click="showFireworks = false">×</button>
     </div>
   </div>
 </template>
@@ -160,20 +169,20 @@ import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { get, post } from '@/api/index';
 
-interface Word { id: number; word: string; phonetic: string; meaning: string; }
 interface WordBook { id: number; name: string; category: string; wordCount: number; }
+interface Word { id: number; word: string; phonetic: string; meaning: string; }
 
 const modes = [
-  { value: 'flashcard', label: 'Flashcard' },
-  { value: 'fillBlank', label: 'Fill Blank' },
-  { value: 'spelling', label: 'Spelling' }
+  { value: 'flashcard', label: '闪卡' },
+  { value: 'fillBlank', label: '填空' },
+  { value: 'spelling', label: '拼写' }
 ];
 
 const books = ref<WordBook[]>([]);
 const selectedBookId = ref<number>(2);
 const showLearning = ref(false);
 const showSettings = ref(false);
-const settings = ref({ dailyGoal: 20, reminderTime: '', restDuration: 2 });
+const settings = ref({ dailyGoal: 20, reminderTime: '' });
 
 const wordList = ref<Word[]>([]);
 const currentIndex = ref(0);
@@ -191,7 +200,6 @@ const dailyGoal = ref(20);
 const wrongCount = ref(0);
 const toast = ref({ show: false, message: '' });
 const showFireworks = ref(false);
-let goalAchieved = false;
 
 const currentWord = computed(() => wordList.value[currentIndex.value] || { id: 0, word: '', phonetic: '', meaning: '' });
 const progressPercent = computed(() => Math.min((learnedToday.value / dailyGoal.value) * 100, 100));
@@ -230,7 +238,7 @@ const saveSettings = () => {
   dailyGoal.value = settings.value.dailyGoal;
   localStorage.setItem('vocabularySettings', JSON.stringify(settings.value));
   showSettings.value = false;
-  showToast('Settings saved');
+  showToast('设置已保存');
 };
 
 const startLearning = async () => {
@@ -242,9 +250,9 @@ const startLearning = async () => {
       resetState();
       showLearning.value = true;
     } else {
-      ElMessage.warning('No words available');
+      ElMessage.warning('该词书暂无单词可学习');
     }
-  } catch (e) { ElMessage.error('Failed to load words'); }
+  } catch (e) { ElMessage.error('加载单词失败'); }
 };
 
 const resetState = () => {
@@ -263,38 +271,58 @@ const switchMode = (mode: string) => {
 };
 
 const checkFillBlank = () => {
-  if (fillBlankChecked.value) { nextWord(); return; }
+  if (fillBlankChecked.value) { 
+    resetState();
+    return; 
+  }
   fillBlankChecked.value = true;
   fillBlankCorrect.value = fillBlankAnswer.value.trim().toLowerCase() === currentWord.value.word.toLowerCase();
-  showToast(fillBlankCorrect.value ? 'Correct!' : 'Answer: ' + currentWord.value.word);
 };
 
 const checkSpelling = () => {
-  if (spellingChecked.value) { nextWord(); return; }
+  if (spellingChecked.value) { 
+    resetState();
+    return; 
+  }
   spellingChecked.value = true;
   spellingCorrect.value = spellingAnswer.value.trim().toLowerCase() === currentWord.value.word.toLowerCase();
-  showToast(spellingCorrect.value ? 'Correct!' : 'Answer: ' + currentWord.value.word);
 };
 
+// 标记为认识
 const markKnown = async () => {
-  const justAchieved = !goalAchieved && learnedToday.value >= dailyGoal.value - 1;
+  const justAchieved = learnedToday.value === dailyGoal.value - 1;
   learnedToday.value++;
   saveProgress();
+  
   if (justAchieved) {
     showFireworks.value = true;
-    setTimeout(() => { showFireworks.value = false; }, 6000);
+    setTimeout(() => { showFireworks.value = false; }, 5000);
   }
-  if (currentWord.value.id) {
-    try { await post('/words/correct', null, { params: { wordId: currentWord.value.id, bookId: selectedBookId.value } }); } catch (e) {}
+  
+  // 记录到后端
+  if (currentWord.value.id && selectedBookId.value) {
+    try { 
+      await post('/words/correct', null, { params: { wordId: currentWord.value.id, bookId: selectedBookId.value } }); 
+    } catch (e) {}
   }
+  
   nextWord();
 };
 
+// 标记为不认识 - 加入错词本
 const markUnknown = async () => {
   wrongCount.value++;
-  if (currentWord.value.id) {
-    try { await post('/words/wrong', null, { params: { wordId: currentWord.value.id, bookId: selectedBookId.value } }); } catch (e) {}
+  
+  // 记录到后端错词本
+  if (currentWord.value.id && selectedBookId.value) {
+    try { 
+      await post('/words/wrong', null, { params: { wordId: currentWord.value.id, bookId: selectedBookId.value } }); 
+      showToast('已加入错词本');
+    } catch (e) {
+      console.error('记录错词失败:', e);
+    }
   }
+  
   nextWord();
 };
 
@@ -304,41 +332,29 @@ const nextWord = () => {
     currentIndex.value++;
   } else {
     showLearning.value = false;
-    ElMessage.success('Session complete!');
+    ElMessage.success('本轮学习完成！');
   }
 };
 
 const showToast = (msg: string) => {
   toast.value = { show: true, message: msg };
-  setTimeout(() => { toast.value.show = false; }, 2500);
+  setTimeout(() => { toast.value.show = false; }, 2000);
 };
 
 onMounted(() => { loadBooks(); loadProgress(); });
 </script>
 
 <style scoped>
-.word-page {
-  min-height: 100%;
-  padding: 0;
-  background: transparent;
-}
+.word-page { min-height: 100%; padding: 0; background: transparent; }
 
-/* Top Bar */
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
+/* 顶部栏 */
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; margin-bottom: 16px; }
 .app-title { font-size: 18px; font-weight: bold; color: white; }
 .top-bar-right { display: flex; gap: 8px; }
 .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .icon-btn:hover { background: rgba(255,255,255,0.35); }
 
-/* Welcome */
+/* 欢迎界面 */
 .welcome-section { padding: 8px 0; }
 .progress-card { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; }
 .progress-label { font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
@@ -347,23 +363,29 @@ onMounted(() => { loadBooks(); loadProgress(); });
 .progress-bar-bg { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
 .progress-bar-fill { height: 100%; background: white; border-radius: 3px; transition: width 0.4s; }
 .remaining { font-size: 12px; opacity: 0.8; }
-.start-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.wrong-btn { width: 100%; padding: 12px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.start-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.wrong-btn { width: 100%; padding: 12px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
-/* Learning */
+/* 学习界面 */
+.learning-section { padding: 8px 0; }
 .learn-progress { display: flex; justify-content: space-between; font-size: 13px; color: #909399; margin-bottom: 12px; }
 .word-card { background: white; border-radius: 16px; padding: 28px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center; margin-bottom: 12px; }
-.word-text { font-size: 44px; font-weight: bold; color: #303133; margin-bottom: 12px; }
-.meaning-text { font-size: 20px; color: #667eea; margin-bottom: 6px; }
-.phonetic-text { font-size: 14px; color: #909399; margin-bottom: 16px; }
+.word-text { font-size: 44px; font-weight: bold; color: #303133; margin-bottom: 8px; }
+.phonetic-text { font-size: 16px; color: #909399; margin-bottom: 12px; }
+.meaning-text { font-size: 20px; color: #667eea; margin-bottom: 16px; line-height: 1.5; }
 .reveal-btn { padding: 10px 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
-.action-row { display: flex; gap: 12px; margin-top: 12px; }
+
+/* 操作按钮 */
+.action-row { display: flex; gap: 12px; margin-top: 16px; }
 .unk-btn, .knw-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
 .unk-btn { background: #ef4444; color: white; }
 .knw-btn { background: #10b981; color: white; }
+
+/* 填空/拼写模式 */
 .hint-text { font-size: 13px; color: #909399; margin-bottom: 10px; }
 .hl { color: #667eea; font-weight: bold; }
-.meaning-display { font-size: 18px; color: #303133; margin-bottom: 10px; }
+.meaning-display { font-size: 18px; color: #303133; margin-bottom: 6px; }
+.spelling-tip { color: #909399; font-size: 13px; margin-bottom: 10px; }
 .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #e4e7ed; border-radius: 10px; text-align: center; outline: none; margin-bottom: 8px; box-sizing: border-box; }
 .answer-input:focus { border-color: #667eea; }
 .feedback { padding: 8px; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
@@ -371,31 +393,30 @@ onMounted(() => { loadBooks(); loadProgress(); });
 .feedback.err { background: #fee2e2; color: #991b1b; }
 .check-btn { padding: 10px 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
 
-/* Mode Bar */
+/* 模式切换 */
 .mode-bar { display: flex; gap: 6px; background: white; border-radius: 10px; padding: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.mode-btn { flex: 1; padding: 7px; border: none; background: transparent; border-radius: 7px; font-size: 12px; color: #909399; cursor: pointer; transition: all 0.2s; }
+.mode-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 7px; font-size: 13px; color: #909399; cursor: pointer; transition: all 0.2s; }
 .mode-btn.active { background: #667eea; color: white; }
 
-/* Modal */
+/* 弹窗 */
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal { background: white; border-radius: 16px; width: 90%; max-width: 340px; overflow: hidden; }
 .modal-hd { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; font-size: 16px; font-weight: bold; color: #303133; }
-.x-btn { width: 28px; height: 28px; border-radius: 50%; background: #f5f5f5; border: none; cursor: pointer; font-size: 14px; color: #909399; }
+.x-btn { width: 28px; height: 28px; border-radius: 50%; background: #f5f5f5; border: none; cursor: pointer; font-size: 16px; color: #909399; }
 .modal-bd { padding: 16px 20px; }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 13px; color: #606266; margin-bottom: 5px; }
 .field input { width: 100%; padding: 8px 10px; border: 1px solid #dcdfe6; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
 .modal-ft { display: flex; gap: 10px; padding: 12px 20px; border-top: 1px solid #f0f0f0; }
-.cancel-btn, .save-btn { flex: 1; padding: 9px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
-.cancel-btn { background: #f5f5f5; color: #606266; }
-.save-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+.cancel-btn { flex: 1; padding: 10px; background: #f5f5f5; color: #606266; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.save-btn { flex: 1; padding: 10px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
 
 /* Toast */
 .toast-msg { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); color: white; padding: 10px 22px; border-radius: 8px; font-size: 14px; z-index: 300; }
 
-/* Fireworks */
+/* 庆祝动画 */
 .fireworks { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 300; }
-.congrats { font-size: 32px; color: white; font-weight: bold; animation: pop 1s infinite; }
-@keyframes pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.congrats { font-size: 28px; color: white; font-weight: bold; text-align: center; animation: pop 1s infinite; }
+@keyframes pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
 .close-fireworks { position: absolute; top: 30px; right: 30px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; font-size: 18px; cursor: pointer; }
 </style>
