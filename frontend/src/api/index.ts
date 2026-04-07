@@ -43,8 +43,8 @@ export function get<T>(url: string, params?: Record<string, unknown>): Promise<A
   return instance.get<ApiResponse<T>>(url, { params }).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
 }
 
-export function post<T>(url: string, data?: unknown): Promise<ApiResponse<T>> {
-  return instance.post<ApiResponse<T>>(url, data).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
+export function post<T>(url: string, data?: unknown, config?: { params?: Record<string, unknown> }): Promise<ApiResponse<T>> {
+  return instance.post<ApiResponse<T>>(url, data, config).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
 }
 
 export function put<T>(url: string, data?: unknown): Promise<ApiResponse<T>> {

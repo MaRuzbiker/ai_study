@@ -46,32 +46,35 @@
 
       <!-- 单词卡片 -->
       <div class="word-card">
-        <!-- 显示单词和音标 -->
-        <div class="word-text">{{ currentWord.word }}</div>
-        <div v-if="currentWord.phonetic" class="phonetic-text">{{ currentWord.phonetic }}</div>
-        
-        <!-- 显示释义 -->
-        <div v-if="showMeaning" class="meaning-text">{{ currentWord.meaning }}</div>
-
-        <!-- 显示答案按钮 -->
-        <button v-if="!showMeaning && currentMode === 'flashcard'" class="reveal-btn" @click="showMeaning = true">
-          显示释义
-        </button>
-
-        <!-- 闪卡模式：认识/不认识 -->
-        <template v-if="currentMode === 'flashcard' && showMeaning">
-          <div class="action-row">
-            <button class="unk-btn" @click="markUnknown">不认识</button>
-            <button class="knw-btn" @click="markKnown">认识</button>
-          </div>
+        <!-- 闪卡模式：显示单词，点击后显示释义 -->
+        <template v-if="currentMode === 'flashcard'">
+          <div class="word-text">{{ currentWord.word }}</div>
+          <div v-if="currentWord.phonetic" class="phonetic-text">{{ currentWord.phonetic }}</div>
+          
+          <div v-if="showMeaning" class="meaning-text">{{ currentWord.meaning }}</div>
+          
+          <button v-if="!showMeaning" class="reveal-btn" @click="showMeaning = true">
+            显示释义
+          </button>
+          
+          <template v-if="showMeaning">
+            <div class="action-row">
+              <button class="unk-btn" @click="markUnknown">不认识</button>
+              <button class="knw-btn" @click="markKnown">认识</button>
+            </div>
+          </template>
         </template>
 
-        <!-- 填空模式 -->
+        <!-- 填空模式：只显示释义，隐藏单词 -->
         <template v-if="currentMode === 'fillBlank'">
+          <div class="mode-hint">根据释义填写单词</div>
+          <div class="meaning-prompt">{{ currentWord.meaning }}</div>
+          
           <div class="hint-text">
             提示：首字母 <span class="hl">{{ currentWord.word.charAt(0).toUpperCase() }}</span>，
             共 {{ currentWord.word.length }} 个字母
           </div>
+          
           <input
             v-model="fillBlankAnswer"
             class="answer-input"
@@ -79,22 +82,30 @@
             :disabled="fillBlankChecked"
             @keyup.enter="checkFillBlank"
           />
+          
           <div v-if="fillBlankChecked" class="feedback" :class="fillBlankCorrect ? 'ok' : 'err'">
             {{ fillBlankCorrect ? '正确！' : '正确答案：' + currentWord.word }}
           </div>
-          <div v-if="fillBlankChecked" class="action-row">
-            <button class="unk-btn" @click="markUnknown">不认识</button>
-            <button class="knw-btn" @click="markKnown">认识</button>
-          </div>
-          <button v-else class="check-btn" @click="checkFillBlank">
-            检查
-          </button>
+          
+          <template v-if="fillBlankChecked">
+            <div class="action-row">
+              <button class="unk-btn" @click="markUnknown">不认识</button>
+              <button class="knw-btn" @click="markKnown">认识</button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="action-row-single">
+              <button class="check-btn" @click="checkFillBlank">检查</button>
+              <button class="skip-btn" @click="revealFillBlank">显示答案</button>
+            </div>
+          </template>
         </template>
 
-        <!-- 拼写模式 -->
+        <!-- 拼写模式：只显示释义，隐藏单词 -->
         <template v-if="currentMode === 'spelling'">
-          <div class="meaning-display">{{ currentWord.meaning }}</div>
-          <div class="spelling-tip">请根据释义拼写单词</div>
+          <div class="mode-hint">根据释义拼写单词</div>
+          <div class="meaning-prompt">{{ currentWord.meaning }}</div>
+          
           <input
             v-model="spellingAnswer"
             class="answer-input"
@@ -102,16 +113,23 @@
             :disabled="spellingChecked"
             @keyup.enter="checkSpelling"
           />
+          
           <div v-if="spellingChecked" class="feedback" :class="spellingCorrect ? 'ok' : 'err'">
             {{ spellingCorrect ? '正确！' : '正确答案：' + currentWord.word }}
           </div>
-          <div v-if="spellingChecked" class="action-row">
-            <button class="unk-btn" @click="markUnknown">不认识</button>
-            <button class="knw-btn" @click="markKnown">认识</button>
-          </div>
-          <button v-else class="check-btn" @click="checkSpelling">
-            检查
-          </button>
+          
+          <template v-if="spellingChecked">
+            <div class="action-row">
+              <button class="unk-btn" @click="markUnknown">不认识</button>
+              <button class="knw-btn" @click="markKnown">认识</button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="action-row-single">
+              <button class="check-btn" @click="checkSpelling">检查</button>
+              <button class="skip-btn" @click="revealSpelling">显示答案</button>
+            </div>
+          </template>
         </template>
       </div>
 
@@ -270,22 +288,52 @@ const switchMode = (mode: string) => {
   resetState();
 };
 
+// 填空模式：检查答案
 const checkFillBlank = () => {
-  if (fillBlankChecked.value) { 
-    resetState();
-    return; 
-  }
+  if (fillBlankChecked.value) return;
+  
+  const userAnswer = fillBlankAnswer.value.trim().toLowerCase();
+  const correctAnswer = currentWord.value.word.toLowerCase();
+  
   fillBlankChecked.value = true;
-  fillBlankCorrect.value = fillBlankAnswer.value.trim().toLowerCase() === currentWord.value.word.toLowerCase();
+  fillBlankCorrect.value = userAnswer === correctAnswer;
+  
+  if (!fillBlankCorrect.value) {
+    fillBlankAnswer.value = currentWord.value.word;
+    showToast('正确答案: ' + currentWord.value.word);
+  }
 };
 
+// 填空模式：显示答案
+const revealFillBlank = () => {
+  fillBlankAnswer.value = currentWord.value.word;
+  fillBlankChecked.value = true;
+  fillBlankCorrect.value = false;
+  showToast('正确答案: ' + currentWord.value.word);
+};
+
+// 拼写模式：检查答案
 const checkSpelling = () => {
-  if (spellingChecked.value) { 
-    resetState();
-    return; 
-  }
+  if (spellingChecked.value) return;
+  
+  const userAnswer = spellingAnswer.value.trim().toLowerCase();
+  const correctAnswer = currentWord.value.word.toLowerCase();
+  
   spellingChecked.value = true;
-  spellingCorrect.value = spellingAnswer.value.trim().toLowerCase() === currentWord.value.word.toLowerCase();
+  spellingCorrect.value = userAnswer === correctAnswer;
+  
+  if (!spellingCorrect.value) {
+    spellingAnswer.value = currentWord.value.word;
+    showToast('正确答案: ' + currentWord.value.word);
+  }
+};
+
+// 拼写模式：显示答案
+const revealSpelling = () => {
+  spellingAnswer.value = currentWord.value.word;
+  spellingChecked.value = true;
+  spellingCorrect.value = false;
+  showToast('正确答案: ' + currentWord.value.word);
 };
 
 // 标记为认识
@@ -311,12 +359,11 @@ const markKnown = async () => {
 
 // 标记为不认识 - 加入错词本
 const markUnknown = async () => {
-  wrongCount.value++;
-  
   // 记录到后端错词本
   if (currentWord.value.id && selectedBookId.value) {
     try { 
       await post('/words/wrong', null, { params: { wordId: currentWord.value.id, bookId: selectedBookId.value } }); 
+      wrongCount.value++;
       showToast('已加入错词本');
     } catch (e) {
       console.error('记录错词失败:', e);
@@ -370,10 +417,23 @@ onMounted(() => { loadBooks(); loadProgress(); });
 .learning-section { padding: 8px 0; }
 .learn-progress { display: flex; justify-content: space-between; font-size: 13px; color: #909399; margin-bottom: 12px; }
 .word-card { background: white; border-radius: 16px; padding: 28px 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center; margin-bottom: 12px; }
+
+/* 闪卡模式 */
 .word-text { font-size: 44px; font-weight: bold; color: #303133; margin-bottom: 8px; }
 .phonetic-text { font-size: 16px; color: #909399; margin-bottom: 12px; }
 .meaning-text { font-size: 20px; color: #667eea; margin-bottom: 16px; line-height: 1.5; }
 .reveal-btn { padding: 10px 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+
+/* 填空/拼写模式 */
+.mode-hint { font-size: 14px; color: #909399; margin-bottom: 10px; }
+.meaning-prompt { font-size: 20px; color: #303133; margin-bottom: 16px; line-height: 1.6; font-weight: 500; }
+.hint-text { font-size: 13px; color: #909399; margin-bottom: 10px; }
+.hl { color: #667eea; font-weight: bold; }
+.answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #e4e7ed; border-radius: 10px; text-align: center; outline: none; margin-bottom: 8px; box-sizing: border-box; }
+.answer-input:focus { border-color: #667eea; }
+.feedback { padding: 8px; border-radius: 6px; font-size: 14px; margin-bottom: 12px; }
+.feedback.ok { background: #d1fae5; color: #065f46; }
+.feedback.err { background: #fee2e2; color: #991b1b; }
 
 /* 操作按钮 */
 .action-row { display: flex; gap: 12px; margin-top: 16px; }
@@ -381,17 +441,9 @@ onMounted(() => { loadBooks(); loadProgress(); });
 .unk-btn { background: #ef4444; color: white; }
 .knw-btn { background: #10b981; color: white; }
 
-/* 填空/拼写模式 */
-.hint-text { font-size: 13px; color: #909399; margin-bottom: 10px; }
-.hl { color: #667eea; font-weight: bold; }
-.meaning-display { font-size: 18px; color: #303133; margin-bottom: 6px; }
-.spelling-tip { color: #909399; font-size: 13px; margin-bottom: 10px; }
-.answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #e4e7ed; border-radius: 10px; text-align: center; outline: none; margin-bottom: 8px; box-sizing: border-box; }
-.answer-input:focus { border-color: #667eea; }
-.feedback { padding: 8px; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
-.feedback.ok { background: #d1fae5; color: #065f46; }
-.feedback.err { background: #fee2e2; color: #991b1b; }
-.check-btn { padding: 10px 28px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.action-row-single { display: flex; gap: 10px; margin-top: 16px; }
+.check-btn { flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+.skip-btn { padding: 12px 20px; background: #f5f5f5; color: #909399; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; }
 
 /* 模式切换 */
 .mode-bar { display: flex; gap: 6px; background: white; border-radius: 10px; padding: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
