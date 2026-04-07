@@ -14,6 +14,23 @@
 
     <!-- 欢迎界面 -->
     <div v-if="!showLearning" class="welcome-section">
+      <!-- 词书选择 -->
+      <div class="book-selector">
+        <div class="book-label">选择词书</div>
+        <div class="book-list">
+          <div
+            v-for="book in books"
+            :key="book.id"
+            class="book-item"
+            :class="{ active: selectedBookId === book.id }"
+            @click="selectedBookId = book.id"
+          >
+            <div class="book-name">{{ book.name }}</div>
+            <div class="book-count">{{ book.wordCount }} 词</div>
+          </div>
+        </div>
+      </div>
+
       <div class="progress-card">
         <div class="progress-label">今日学习进度</div>
         <div class="progress-row">
@@ -403,6 +420,17 @@ onMounted(() => { loadBooks(); loadProgress(); });
 
 /* 欢迎界面 */
 .welcome-section { padding: 8px 0; }
+
+/* 词书选择 */
+.book-selector { margin-bottom: 16px; }
+.book-label { font-size: 14px; color: #606266; margin-bottom: 10px; font-weight: 500; }
+.book-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.book-item { background: white; border: 2px solid #e4e7ed; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; }
+.book-item:hover { border-color: #667eea; }
+.book-item.active { border-color: #667eea; background: linear-gradient(135deg, #667eea10, #764ba210); }
+.book-name { font-size: 14px; font-weight: 600; color: #303133; margin-bottom: 2px; }
+.book-count { font-size: 12px; color: #909399; }
+
 .progress-card { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; }
 .progress-label { font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
 .progress-row { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
