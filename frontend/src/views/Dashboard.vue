@@ -25,9 +25,8 @@
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card">
-          <el-statistic title="本周学习时长" :value="stats.weekMinutes">
-            <template #suffix>分钟</template>
-          </el-statistic>
+          <div class="stat-title">今日学习时长</div>
+          <div class="stat-time">{{ formatTime(todayTotalSeconds) }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -63,8 +62,8 @@
                 <span class="stat-value info">{{ stats.totalTasks }}</span>
               </div>
               <div class="stat-row">
-                <span>本周学习时长</span>
-                <span class="stat-value">{{ stats.weekMinutes }} 分钟</span>
+                <span>今日学习时长</span>
+                <span class="stat-value">{{ formatTime(todayTotalSeconds) }}</span>
               </div>
               <div class="stat-actions">
                 <el-button type="primary" size="default" @click="goToAi" class="ai-suggestion-btn">
@@ -180,6 +179,7 @@ const STORAGE_WEEK = 'dashboard_week_info';
 const dailyTodos = ref<Array<any>>([]);
 const dailyTargetMinutes = ref<number>(120);
 const todayMinutes = ref<number>(0);
+const todayTotalSeconds = ref<number>(0);
 const newTodoText = ref('');
 const todayTodoTotal = ref<number>(0);
 const todayTodoDone = ref<number>(0);
@@ -214,6 +214,24 @@ const getTodayDateStr = (): string => {
   const m = (d.getMonth() + 1).toString().padStart(2, '0');
   const day = d.getDate().toString().padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
+};
+
+const formatTime = (totalSeconds: number): string => {
+  if (!totalSeconds || totalSeconds < 0) return '0s';
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+  return parts.join(' ');
+};
+
+const recalcTodaySeconds = () => {
+  todayTotalSeconds.value = dailyTodos.value.reduce(
+    (sum: number, t: any) => sum + (t.accumulatedSeconds || 0), 0
+  );
 };
 
 const loadWeekInfo = (): WeekInfo => {
@@ -319,13 +337,14 @@ const fetchStats = async () => {
       stats.totalTasks = 0;
     }
 
-    // 今日分钟数来自今日任务存储
+    // 今日秒数来自今日任务 accumulatedSeconds
     const todosRaw = localStorage.getItem(STORAGE_TODOS);
     if (todosRaw) {
       dailyTodos.value = JSON.parse(todosRaw);
       todayMinutes.value = dailyTodos.value
         .filter((t: any) => t.done)
         .reduce((s: number, t: any) => s + (t.todayTargetMinutes || 0), 0);
+      recalcTodaySeconds();
       todayTodoTotal.value = dailyTodos.value.length;
       todayTodoDone.value = dailyTodos.value.filter((t: any) => t.done).length;
     } else {
@@ -363,6 +382,7 @@ const loadDailyData = () => {
     todayMinutes.value = dailyTodos.value
       .filter((t: any) => t.done)
       .reduce((s: number, t: any) => s + (t.todayTargetMinutes || 0), 0);
+    recalcTodaySeconds();
     todayTodoTotal.value = dailyTodos.value.length;
     todayTodoDone.value = dailyTodos.value.filter((t: any) => t.done).length;
     recomputeWeekMinutes();
@@ -467,6 +487,19 @@ onMounted(async () => {
 
 .stat-card {
   text-align: center;
+}
+
+.stat-title {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.stat-time {
+  font-size: 28px;
+  font-weight: bold;
+  color: #409EFF;
+  font-variant-numeric: tabular-nums;
 }
 
 .card-header {
