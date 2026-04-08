@@ -9,19 +9,7 @@ public interface UserMapper {
 
     User findByUsername(@Param("username") String username);
 
+    User findByNickname(@Param("nickname") String nickname);
+
     int insert(User user);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -38,7 +38,7 @@ public class AiController {
     public ApiResponse<AiTaskPlanResponse> generateTaskPlan(@RequestBody @Valid AiTaskPlanRequest request) {
         return ApiResponse.success(aiService.generateTaskPlan(getCurrentUserId(), request));
     }
-    
+
     @Operation(summary = "获取可用的 AI 模型列表")
     @GetMapping("/models")
     public ApiResponse<List<Map<String, String>>> getAvailableModels() {
@@ -49,7 +49,3 @@ public class AiController {
         ));
     }
 }
-
-
-
-

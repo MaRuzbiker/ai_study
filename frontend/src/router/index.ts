@@ -13,6 +13,7 @@ const AiAssistant = () => import('@/views/AiAssistant.vue')
 const Achievements = () => import('@/views/Achievements.vue')
 const WordMemorize = () => import('@/views/WordMemorize.vue')
 const WrongBook = () => import('@/views/WrongBook.vue')
+const DeskMate = () => import('@/views/DeskMate.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -78,6 +79,12 @@ const routes: RouteRecordRaw[] = [
         path: 'wrong-book',
         name: 'WrongBook',
         component: WrongBook,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'deskmate',
+        name: 'DeskMate',
+        component: DeskMate,
         meta: { requiresAuth: true }
       }
     ]

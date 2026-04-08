@@ -5,35 +5,27 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class UserContext {
+
     private static final String USER_ID_HEADER = "X-User-Id";
 
+    /**
+     * 获取当前用户ID。
+     * 有 X-User-Id header 时返回实际值；未登录时默认返回 1L（向后兼容）。
+     */
     public static Long getUserId() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes != null) {
             HttpServletRequest request = attributes.getRequest();
             String userIdStr = request.getHeader(USER_ID_HEADER);
-            if (userIdStr != null && !userIdStr.isEmpty()) {
+            if (userIdStr != null && !userIdStr.trim().isEmpty()) {
                 try {
-                    return Long.parseLong(userIdStr);
-                } catch (NumberFormatException e) {
-                    // 如果解析失败，尝试从 Authorization header 中解析
-                    String authHeader = request.getHeader("Authorization");
-                    if (authHeader != null && authHeader.startsWith("Bearer jwt-token-")) {
-                        // 简化处理：从 token 中提取 userId（实际应该用 JWT 解析）
-                        String token = authHeader.substring(7);
-                        String[] parts = token.split("-");
-                        if (parts.length >= 3) {
-                            try {
-                                return Long.parseLong(parts[2]);
-                            } catch (NumberFormatException ignored) {
-                            }
-                        }
-                    }
+                    long userId = Long.parseLong(userIdStr.trim());
+                    if (userId > 0) return userId; // 有效的用户ID
+                } catch (NumberFormatException ignored) {
                 }
             }
         }
-        // 默认返回 1（测试用，实际应该抛出异常）
+        // 默认返回 1L（向后兼容旧逻辑；前端已修复，登录用户会正确发 header）
         return 1L;
     }
 }
-

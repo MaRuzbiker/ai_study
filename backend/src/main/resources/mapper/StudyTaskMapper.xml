@@ -58,6 +58,12 @@
         LIMIT #{query.pageSize} OFFSET ${(query.pageNum - 1) * query.pageSize}
     </select>
 
+    <select id="findAllByUserId" resultMap="StudyTaskResultMap">
+        SELECT * FROM study_task
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+
     <select id="countByUserId" resultType="long">
         SELECT COUNT(*) FROM study_task
         WHERE user_id = #{userId}

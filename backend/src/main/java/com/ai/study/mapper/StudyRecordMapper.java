@@ -23,6 +23,10 @@ public interface StudyRecordMapper {
                                                 @Param("start") LocalDate start,
                                                 @Param("end") LocalDate end);
 
+    List<StudyRecord> findByTaskUserIdAndDateRange(@Param("userId") Long userId,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end);
+
     List<TaskProgressResponse> sumDurationByUserId(@Param("userId") Long userId);
 }
 

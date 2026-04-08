@@ -4,18 +4,21 @@ import type { ApiResponse } from '@/types/api';
 
 const instance = axios.create({
   baseURL: '/api',
-  timeout: 120000 // 增加到120秒，因为AI响应可能需要较长时间
+  timeout: 120000
 });
 
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  // 只对 /api 路径的请求添加 token，避免拦截静态资源
-  if (config.url && config.url.startsWith('/api')) {
+  // 移除对 baseURL 的依赖，直接检查是否以 /api 开头
+  const url = (config as any).url || '';
+  if (url.startsWith('/')) {
     const token = store.state.user.token;
     const userId = store.state.user.userId;
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-      // 添加用户ID到请求头，方便后端获取
-      if (userId) {
+    if (config.headers) {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      // userId > 0 才发 X-User-Id（避免发 0）
+      if (userId > 0) {
         config.headers['X-User-Id'] = String(userId);
       }
     }
@@ -26,11 +29,8 @@ instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: any) => {
-    // 只处理 /api 路径的 401 错误，避免拦截静态资源
-    if (error.config?.url?.startsWith('/api') && error.response?.status === 401) {
-      // 清除本地存储
+    if (error.config?.url?.startsWith('/') && error.response?.status === 401) {
       localStorage.clear();
-      // 跳转到登录页
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
@@ -54,4 +54,3 @@ export function put<T>(url: string, data?: unknown): Promise<ApiResponse<T>> {
 export function del<T>(url: string): Promise<ApiResponse<T>> {
   return instance.delete<ApiResponse<T>>(url).then((res: AxiosResponse<ApiResponse<T>>) => res.data);
 }
-

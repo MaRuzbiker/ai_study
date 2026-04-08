@@ -20,6 +20,8 @@ public interface StudyTaskMapper {
 
     List<StudyTask> findByUserId(@Param("userId") Long userId, @Param("query") TaskQueryRequest query);
 
+    List<StudyTask> findAllByUserId(@Param("userId") Long userId);
+
     long countByUserId(@Param("userId") Long userId, @Param("query") TaskQueryRequest query);
 
     List<StudyTask> findAll(@Param("query") TaskQueryRequest query);

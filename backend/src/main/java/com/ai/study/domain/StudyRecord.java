@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class StudyRecord {
     private Long id;
     private Long taskId;
+    private Long userId;
     private LocalDate studyDate;
     private Integer durationMinutes;
     private String comment;

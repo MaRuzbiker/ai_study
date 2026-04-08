@@ -41,4 +41,10 @@ public class StatsController {
         Map<String, Object> stats = statsService.getSubjectStats();
         return Result.success(stats);
     }
+
+    @GetMapping("/today")
+    public Result<Map<String, Object>> getTodayStats() {
+        Map<String, Object> stats = statsService.getTodayStats();
+        return Result.success(stats);
+    }
 }

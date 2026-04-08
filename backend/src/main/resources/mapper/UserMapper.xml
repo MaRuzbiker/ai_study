@@ -16,6 +16,10 @@
         SELECT * FROM user WHERE username = #{username}
     </select>
 
+    <select id="findByNickname" resultMap="UserResultMap">
+        SELECT * FROM user WHERE nickname = #{nickname}
+    </select>
+
     <insert id="insert" parameterType="com.ai.study.domain.User"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user (username, password, nickname, role, create_time)

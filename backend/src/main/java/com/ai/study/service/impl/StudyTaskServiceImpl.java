@@ -24,6 +24,10 @@ public class StudyTaskServiceImpl implements StudyTaskService {
 
     @Override
     public PageResult<StudyTask> pageTasks(Long userId, TaskQueryRequest queryRequest) {
+        // userId 或 queryRequest 为 null 时返回空分页结果
+        if (userId == null || userId <= 0 || queryRequest == null) {
+            return new PageResult<>(List.of(), 0, 1, 10);
+        }
         List<StudyTask> list = studyTaskMapper.findByUserId(userId, queryRequest);
         long total = studyTaskMapper.countByUserId(userId, queryRequest);
         return new PageResult<>(list, total, queryRequest.getPageNum(), queryRequest.getPageSize());

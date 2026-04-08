@@ -32,6 +32,9 @@
         <el-menu-item index="/wrong-book">
           <span>📝 错词本</span>
         </el-menu-item>
+        <el-menu-item index="/deskmate">
+          <span>👫 同桌学习</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

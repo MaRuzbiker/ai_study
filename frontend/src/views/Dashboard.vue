@@ -156,6 +156,7 @@ import { Trophy, Medal, StarFilled, ChatDotRound } from '@element-plus/icons-vue
 import { getTaskPage, updateTask } from '@/api/task';
 import type { Task, TaskProgress } from '@/types/api';
 import { createRecord, getTaskProgress as getTaskProgressApi } from '@/api/record';
+import { getTodayStats } from '@/api/stats';
 
 const router = useRouter();
 const loading = ref(false);
@@ -314,30 +315,26 @@ const refreshLearnedMap = async () => {
 const fetchStats = async () => {
   loading.value = true;
   try {
-    // 尝试获取任务列表（如果后端接口可用）
+    // 1. 从后端 API 获取用户级今日统计（任务数、学习时长）
     try {
-      const taskRes = await getTaskPage({ pageNum: 1, pageSize: 200, keyword: '', status: '' });
-      if (taskRes.code === 0) {
-        const tasks = taskRes.data.list;
-
-        // 已完成任务数：学习记录累计时长达到目标时长视为完成
-        stats.doneTasks = tasks.filter((t: Task) => {
-          const learnedMinutes = learnedMap.value[t.id] || 0;
-          return learnedMinutes >= t.targetHours * 60;
-        }).length;
-        // 未完成任务数：总数减去已完成
-        stats.totalTasks = Math.max(0, tasks.length - stats.doneTasks);
-        // 进行中任务暂不区分，先置 0
-        stats.doingTasks = 0;
+      const todayRes = await getTodayStats();
+      if (todayRes.code === 0) {
+        const d = todayRes.data;
+        stats.totalTasks = d.undoneTaskCount || 0;
+        stats.doneTasks = d.doneTaskCount || 0;
+        todayTotalSeconds.value = d.totalSeconds || 0;
       }
-    } catch (error) {
-      // 如果后端接口不可用（任务功能还没实现），使用默认值
-      console.log('任务接口暂不可用，使用默认统计数据');
-      stats.doneTasks = 0;
+    } catch (e) {
+      console.warn('今日统计接口暂不可用:', e);
       stats.totalTasks = 0;
+      stats.doneTasks = 0;
+      todayTotalSeconds.value = 0;
     }
 
-    // 今日秒数来自今日任务 accumulatedSeconds
+    // 2. 从后端获取任务学习进度
+    await refreshLearnedMap();
+
+    // 3. 本地今日任务（暂时保留，后续迁移到后端）
     const todosRaw = localStorage.getItem(STORAGE_TODOS);
     if (todosRaw) {
       dailyTodos.value = JSON.parse(todosRaw);
@@ -354,13 +351,9 @@ const fetchStats = async () => {
     const target = localStorage.getItem(STORAGE_TARGET);
     if (target) dailyTargetMinutes.value = Number(target);
 
-    // 其他统计（打卡记录已停用）
-    stats.weekRecords = 0;
-    // 重新统计累计学习时长
-    recomputeWeekMinutes();
-
+    // 成就计算
     achievements.taskMaster = taskCompletionPercent.value >= 80;
-    achievements.weekStreak = stats.weekRecords >= 7;
+    achievements.weekStreak = false; // 待接入打卡记录
     achievements.todayGoal = dailyProgress.value >= 100;
   } catch (error) {
     console.error('获取统计数据失败:', error);

@@ -33,6 +33,7 @@ public class RecordController {
     public ApiResponse<StudyRecord> createRecord(@RequestBody @Valid RecordCreateRequest request) {
         StudyRecord record = new StudyRecord();
         BeanUtils.copyProperties(request, record);
+        record.setUserId(getCurrentUserId());
         return ApiResponse.success(studyRecordService.createRecord(record));
     }
 
@@ -61,8 +62,6 @@ public class RecordController {
     @Operation(summary = "查询当前用户每个任务累计学习时长")
     @GetMapping("/progress")
     public ApiResponse<List<TaskProgressResponse>> listTaskProgress() {
-        Long userId = getCurrentUserId();
-        return ApiResponse.success(studyRecordService.sumDurationByUserId(userId));
+        return ApiResponse.success(studyRecordService.sumDurationByUserId(getCurrentUserId()));
     }
 }
-

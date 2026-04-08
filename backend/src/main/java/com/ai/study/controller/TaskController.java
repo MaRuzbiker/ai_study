@@ -26,20 +26,16 @@ public class TaskController {
     }
 
     @Operation(summary = "分页查询任务")
-    // 分页查询任务接口
     @GetMapping
     public ApiResponse<PageResult<StudyTask>> pageTasks(TaskQueryRequest queryRequest) {
-        Long userId = getCurrentUserId();
-        // 调用服务层查询
-        PageResult<StudyTask> page = studyTaskService.pageTasks(userId, queryRequest);
+        PageResult<StudyTask> page = studyTaskService.pageTasks(getCurrentUserId(), queryRequest);
         return ApiResponse.success(page);
     }
 
     @Operation(summary = "新建任务")
     @PostMapping
     public ApiResponse<StudyTask> createTask(@RequestBody @Valid TaskCreateRequest request) {
-        Long userId = getCurrentUserId();
-        StudyTask task = studyTaskService.createTask(userId, request);
+        StudyTask task = studyTaskService.createTask(getCurrentUserId(), request);
         return ApiResponse.success(task);
     }
 
@@ -64,4 +60,3 @@ public class TaskController {
         return ApiResponse.success(studyTaskService.getTaskById(id));
     }
 }
-

@@ -16,6 +16,10 @@ public class WordController {
 
     private final WordService wordService;
 
+    private Long getCurrentUserId() {
+        return UserContext.getUserId();
+    }
+
     /** 获取所有词书 */
     @GetMapping("/books")
     public ApiResponse<List<WordBook>> getBooks() {
@@ -27,8 +31,7 @@ public class WordController {
     public ApiResponse<List<Word>> getReviewWords(
             @RequestParam Integer bookId,
             @RequestParam(defaultValue = "20") Integer limit) {
-        Long userId = UserContext.getUserId();
-        return ApiResponse.success(wordService.getRandomWords(bookId, limit, userId));
+        return ApiResponse.success(wordService.getRandomWords(bookId, limit, getCurrentUserId()));
     }
 
     /** 标记单词为认识 */
@@ -36,8 +39,7 @@ public class WordController {
     public ApiResponse<Void> markCorrect(
             @RequestParam Long wordId,
             @RequestParam Integer bookId) {
-        Long userId = UserContext.getUserId();
-        wordService.markCorrect(userId, wordId, bookId);
+        wordService.markCorrect(getCurrentUserId(), wordId, bookId);
         return ApiResponse.success(null);
     }
 
@@ -46,38 +48,33 @@ public class WordController {
     public ApiResponse<Void> markWrong(
             @RequestParam Long wordId,
             @RequestParam Integer bookId) {
-        Long userId = UserContext.getUserId();
-        wordService.markWrong(userId, wordId, bookId);
+        wordService.markWrong(getCurrentUserId(), wordId, bookId);
         return ApiResponse.success(null);
     }
 
     /** 获取错词本 */
     @GetMapping("/wrong-book/{bookId}")
     public ApiResponse<List<WordProgress>> getWrongWords(@PathVariable Integer bookId) {
-        Long userId = UserContext.getUserId();
-        return ApiResponse.success(wordService.getWrongWords(userId, bookId));
+        return ApiResponse.success(wordService.getWrongWords(getCurrentUserId(), bookId));
     }
 
     /** 从错词本移除（标记为已掌握） */
     @DeleteMapping("/wrong-book/{wordId}")
     public ApiResponse<Void> removeFromWrongBook(@PathVariable Long wordId) {
-        Long userId = UserContext.getUserId();
-        wordService.markMastered(userId, wordId);
+        wordService.markMastered(getCurrentUserId(), wordId);
         return ApiResponse.success(null);
     }
 
     /** 清空错词本 */
     @DeleteMapping("/wrong-book/clear/{bookId}")
     public ApiResponse<Void> clearWrongBook(@PathVariable Integer bookId) {
-        Long userId = UserContext.getUserId();
-        wordService.clearWrongWords(userId, bookId);
+        wordService.clearWrongWords(getCurrentUserId(), bookId);
         return ApiResponse.success(null);
     }
 
     /** 获取今日学习统计 */
     @GetMapping("/stats")
     public ApiResponse<DailyWordStats> getTodayStats(@RequestParam Integer bookId) {
-        Long userId = UserContext.getUserId();
-        return ApiResponse.success(wordService.getTodayStats(userId, bookId));
+        return ApiResponse.success(wordService.getTodayStats(getCurrentUserId(), bookId));
     }
 }
