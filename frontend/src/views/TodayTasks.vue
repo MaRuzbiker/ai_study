@@ -66,7 +66,7 @@
     </el-card>
 
     <!-- ===== 计时器弹窗 ===== -->
-    <el-dialog v-model="showTimerDialog" :title="'计时 - ' + (timerTask?.text || '')" width="420px" :close-on-click-modal="false" @closed="onTimerClosed">
+    <el-dialog v-model="showTimerDialog" :title="'计时 - ' + (timerTask?.text || '')" width="420px" :close-on-click-modal="false" :before-close="onBeforeClose">
       <div class="timer-display">
         <div class="timer-time">{{ formatTime(timerSeconds) }}</div>
         <div class="timer-task-name">{{ timerTask?.text }}</div>
@@ -276,6 +276,14 @@ const stopTimer = () => {
 
   timerSeconds.value = 0;
   showTimerDialog.value = false;
+};
+
+const onBeforeClose = (done: () => void) => {
+  if (timerSeconds.value > 0) {
+    // 有计时数据时，自动执行停止并保存
+    stopTimer();
+  }
+  done();
 };
 
 const onTimerClosed = () => {
