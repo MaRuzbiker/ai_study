@@ -55,6 +55,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { syncTodayTasks } from '@/api/todayTask';
 
 const route = useRoute();
 const router = useRouter();
@@ -63,7 +64,24 @@ const store = useStore();
 const activeMenu = computed(() => route.path || '/');
 const nickname = computed(() => store.state.user.nickname || '同学');
 
-const onLogout = () => {
+const onLogout = async () => {
+  // 1. 先读 localStorage（logout 会清空它）
+  let tasks: any[] = [];
+  try {
+    const raw = localStorage.getItem('dashboard_today_todos');
+    if (raw) tasks = JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+
+  // 2. 先同步到后端（此时 userId 还在，header 能发出去）
+  try {
+    if (tasks.length > 0) {
+      await syncTodayTasks(tasks);
+    }
+  } catch (e) {
+    console.warn('退出同步失败:', e);
+  }
+
+  // 3. 再登出（清 localStorage 和 Vuex）
   store.dispatch('user/logout');
   router.push('/login');
 };

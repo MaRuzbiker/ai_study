@@ -62,8 +62,9 @@ public class AiServiceImpl implements AiService {
         String dataset = records.isEmpty()
                 ? "最近 7 天没有任何学习记录。"
                 : records.stream()
-                .map(r -> String.format("日期:%s, 学习时长:%d 分钟, 学习内容或备注:%s",
-                        r.getStudyDate(), r.getDurationMinutes(),
+                .<String>map(r -> String.format("日期:%s, 学习时长:%d 秒, 学习内容或备注:%s",
+                        r.getStudyDate(),
+                        r.getDurationSeconds() != null ? r.getDurationSeconds() : 0,
                         r.getComment() == null ? "" : r.getComment()))
                 .collect(Collectors.joining("\n"));
 

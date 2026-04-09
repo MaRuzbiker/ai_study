@@ -157,6 +157,7 @@ import { getTaskPage, updateTask } from '@/api/task';
 import type { Task, TaskProgress } from '@/types/api';
 import { createRecord, getTaskProgress as getTaskProgressApi } from '@/api/record';
 import { getTodayStats } from '@/api/stats';
+import { getTodayTasksFromBackend } from '@/api/todayTask';
 
 const router = useRouter();
 const loading = ref(false);
@@ -283,13 +284,13 @@ const updateWeekMinutesByDelta = (delta: number) => {
 };
 
 // 创建一条学习记录，写入数据库
-const createStudyRecord = async (taskId: number, minutes: number) => {
+const createStudyRecord = async (taskId: number, seconds: number) => {
   try {
-    if (!taskId || !minutes) return;
+    if (!taskId || !seconds) return;
     await createRecord({
       taskId,
       studyDate: getTodayDateStr(),
-      durationMinutes: minutes,
+      durationSeconds: seconds,
       comment: '今日任务打卡'
     });
   } catch (error) {
@@ -335,16 +336,20 @@ const fetchStats = async () => {
     await refreshLearnedMap();
 
     // 3. 本地今日任务（暂时保留，后续迁移到后端）
+    //    今日学习时长来自 localStorage（和计时器同步），避免受后端数据库历史数据干扰
     const todosRaw = localStorage.getItem(STORAGE_TODOS);
     if (todosRaw) {
       dailyTodos.value = JSON.parse(todosRaw);
       todayMinutes.value = dailyTodos.value
         .filter((t: any) => t.done)
         .reduce((s: number, t: any) => s + (t.todayTargetMinutes || 0), 0);
-      recalcTodaySeconds();
+      recalcTodaySeconds(); // 覆盖后端值，取 localStorage 实时累计
       todayTodoTotal.value = dailyTodos.value.length;
       todayTodoDone.value = dailyTodos.value.filter((t: any) => t.done).length;
     } else {
+      // 无本地任务时，学习时长归零（后端数据库可能有历史数据，不用于今日时长）
+      todayTotalSeconds.value = 0;
+      todayMinutes.value = 0;
       todayTodoTotal.value = 0;
       todayTodoDone.value = 0;
     }
@@ -362,8 +367,32 @@ const fetchStats = async () => {
   }
 };
 
-const loadDailyData = () => {
+const loadDailyData = async () => {
   try {
+    // 优先从后端恢复今日任务（退出登录后可继续）
+    try {
+      const res = await getTodayTasksFromBackend();
+      if (res.code === 0 && res.data && res.data.length > 0) {
+        dailyTodos.value = res.data.map((t: any) => ({
+          ...t,
+          text: t.title || t.text, // 后端返回 title，前端用 text
+          targetHours: t.todayTargetMinutes ? t.todayTargetMinutes / 60 : 1,
+        }));
+        todayMinutes.value = dailyTodos.value
+          .filter((t: any) => t.done)
+          .reduce((s: number, t: any) => s + (t.todayTargetMinutes || 0), 0);
+        recalcTodaySeconds();
+        todayTodoTotal.value = dailyTodos.value.length;
+        todayTodoDone.value = dailyTodos.value.filter((t: any) => t.done).length;
+        recomputeWeekMinutes();
+        saveDailyData();
+        return;
+      }
+    } catch (e) {
+      console.warn('后端恢复今日任务失败，用本地数据:', e);
+    }
+
+    // 回退到 localStorage
     const todos = localStorage.getItem(STORAGE_TODOS);
     const target = localStorage.getItem(STORAGE_TARGET);
     if (todos) {
@@ -399,7 +428,7 @@ const toggleToday = async (item: any) => {
     updateWeekMinutesByDelta(delta);
     // 写一条学习记录到数据库，并更新本地进度
     if (taskId) {
-      await createStudyRecord(taskId, delta);
+      await createStudyRecord(taskId, delta * 60);
       const prev = learnedMap.value[taskId] || 0;
       learnedMap.value = { ...learnedMap.value, [taskId]: prev + delta };
       // 如果累计学习时长达到目标，尝试把任务标记为已完成
@@ -465,7 +494,7 @@ const goToToday = () => {
 };
 
 onMounted(async () => {
-  loadDailyData();
+  await loadDailyData(); // 必须等后端恢复完成，避免被空 localStorage 覆盖
   await refreshLearnedMap();
   await fetchStats();
 });

@@ -102,6 +102,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus';
 import * as echarts from 'echarts';
 import { updateTask } from '@/api/task';
+import { getTodayTasksFromBackend, updateTodayTask, deleteTodayTask, batchUpdateTodayTasks } from '@/api/todayTask';
 import { createRecord } from '@/api/record';
 
 /* ── Constants ── */
@@ -121,6 +122,7 @@ const showTimerDialog = ref(false);
 const timerTask = ref<any>(null);
 const timerSeconds = ref(0);
 const timerState = ref<'idle' | 'running' | 'paused'>('idle');
+const closingTimer = ref(false); // 防止 onBeforeClose 重复触发
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 /* ── Helpers ── */
@@ -177,18 +179,41 @@ const updateWeekSecondsByDelta = (deltaSeconds: number) => {
 };
 
 /* ── Data ── */
-const loadDailyData = () => {
+const loadDailyData = async () => {
   try {
-    const todos = localStorage.getItem(STORAGE_TODOS);
-    const target = localStorage.getItem(STORAGE_TARGET);
-    if (todos) dailyTodos.value = JSON.parse(todos);
-    if (target) dailyTargetMinutes.value = Number(target);
-
-    // Recalculate total seconds
-    recalcTodaySeconds();
+    // 优先从后端恢复今日任务（跨设备同步）
+    try {
+      const res = await getTodayTasksFromBackend();
+      if (res.code === 0 && res.data) {
+        dailyTodos.value = res.data.map((t: any) => ({
+          ...t,
+          text: t.title || t.text, // 后端返回 title，前端用 text
+          targetHours: t.todayTargetMinutes ? t.todayTargetMinutes / 60 : 1,
+        }));
+        recalcTodaySeconds();
+        const target = localStorage.getItem(STORAGE_TARGET);
+        if (target) dailyTargetMinutes.value = Number(target);
+        saveDailyData();
+        nextTick(() => { renderPieChart(); });
+        return; // 后端有数据就不再读 localStorage
+      }
+    } catch (e) {
+      console.warn('后端恢复失败，用本地数据:', e);
+    }
+    // 后端无数据，读 localStorage
+    loadFromLocalStorage();
   } catch (error) {
     console.error('load error:', error);
   }
+};
+
+const loadFromLocalStorage = () => {
+  const todos = localStorage.getItem(STORAGE_TODOS);
+  const target = localStorage.getItem(STORAGE_TARGET);
+  if (todos) dailyTodos.value = JSON.parse(todos);
+  if (target) dailyTargetMinutes.value = Number(target);
+  recalcTodaySeconds();
+  nextTick(() => { renderPieChart(); });
 };
 
 const recalcTodaySeconds = () => {
@@ -209,17 +234,39 @@ const saveTarget = () => {
 const createStudyRecord = async (taskId: number, seconds: number) => {
   try {
     if (!taskId || !seconds) return;
-    const minutes = Math.ceil(seconds / 60);
-    await createRecord({ taskId, studyDate: getTodayDateStr(), durationMinutes: minutes, comment: '计时学习' });
+    await createRecord({ taskId, studyDate: getTodayDateStr(), durationSeconds: seconds, comment: '计时学习' });
   } catch (e) { console.error(e); }
 };
 
 /* ── Task actions ── */
-const toggleToday = (item: any) => {
+const toggleToday = async (item: any) => {
   saveDailyData();
+  // 同步到后端
+  try {
+    if (item.id && typeof item.id === 'number') {
+      await updateTodayTask(item.id, {
+        taskId: item.taskId,
+        title: item.title || item.text,
+        todayTargetMinutes: item.todayTargetMinutes,
+        accumulatedSeconds: item.accumulatedSeconds || 0,
+        done: item.done
+      });
+    }
+  } catch (e) {
+    console.warn('更新后端失败:', e);
+  }
 };
 
-const removeToday = (id: string) => {
+const removeToday = async (id: any) => {
+  // 先尝试从后端删除
+  try {
+    if (typeof id === 'number') {
+      await deleteTodayTask(id);
+    }
+  } catch (e) {
+    console.warn('删除后端失败:', e);
+  }
+  
   dailyTodos.value = dailyTodos.value.filter((t: any) => t.id !== id);
   recalcTodaySeconds();
   saveDailyData();
@@ -255,7 +302,7 @@ const resumeTimer = () => {
   }, 200);
 };
 
-const stopTimer = () => {
+const stopTimer = async () => {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   timerState.value = 'idle';
 
@@ -269,6 +316,22 @@ const stopTimer = () => {
       saveDailyData();
       updateWeekSecondsByDelta(addedSeconds);
       createStudyRecord(task.taskId, addedSeconds);
+      
+      // 同步到后端
+      try {
+        if (task.id && typeof task.id === 'number') {
+          await updateTodayTask(task.id, {
+            taskId: task.taskId,
+            title: task.title || task.text,
+            todayTargetMinutes: task.todayTargetMinutes,
+            accumulatedSeconds: task.accumulatedSeconds,
+            done: task.done
+          });
+        }
+      } catch (e) {
+        console.warn('更新后端失败:', e);
+      }
+      
       renderPieChart();
       ElMessage.success(`已记录 ${formatTime(addedSeconds)} 学习时间`);
     }
@@ -278,11 +341,15 @@ const stopTimer = () => {
   showTimerDialog.value = false;
 };
 
-const onBeforeClose = (done: () => void) => {
+const onBeforeClose = async (done: () => void) => {
+  // 防止重复触发：如果正在停止中，跳过
+  if (closingTimer.value) { done(); return; }
+  closingTimer.value = true;
   if (timerSeconds.value > 0) {
     // 有计时数据时，自动执行停止并保存
-    stopTimer();
+    await stopTimer();
   }
+  closingTimer.value = false;
   done();
 };
 

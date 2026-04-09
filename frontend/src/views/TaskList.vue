@@ -199,6 +199,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { getTaskPage, createTask, updateTask, deleteTask as deleteTaskApi } from '@/api/task';// 导入分页查询接口
+import { addTodayTask } from '@/api/todayTask';
 import type { Task, TaskProgress } from '@/types/api';
 import { getTaskProgress as getTaskProgressApi } from '@/api/record';
 
@@ -245,7 +246,8 @@ const learnedMap = ref<Record<number, number>>({});
 const categories = ref<string[]>([]);
 
 const getTaskProgress = (task: Task): number => {
-  const learnedMinutes = learnedMap.value[task.id] || 0;
+  const learnedSeconds = learnedMap.value[task.id] || 0;
+  const learnedMinutes = learnedSeconds / 60;
   const targetMinutes = task.targetHours * 60;
   if (targetMinutes === 0) return 0;
   const progress = Math.round((learnedMinutes / targetMinutes) * 100);
@@ -290,7 +292,7 @@ const refreshLearnedMap = async () => {
     if (res.code === 0) {
       const map: Record<number, number> = {};
       (res.data as TaskProgress[]).forEach(item => {
-        map[item.taskId] = item.totalMinutes || 0;
+        map[item.taskId] = item.totalSeconds || 0;
       });
       learnedMap.value = map;
     }
@@ -435,35 +437,29 @@ const openAddToTodayDialog = (task: Task) => {
 };
 
 // 确认添加到今日任务
-const confirmAddToToday = () => {
+const confirmAddToToday = async () => {
   if (!selectedTask.value) return;
-
-  const STORAGE_TODOS = 'dashboard_today_todos';
-  const todosRaw = localStorage.getItem(STORAGE_TODOS);
-  const todos: any[] = todosRaw ? JSON.parse(todosRaw) : [];
-
-  const exists = todos.find(t => t.taskId === selectedTask.value!.id);
-  if (exists) {
-    ElMessage.warning('该任务已在今日任务中');
-    addToTodayDialogVisible.value = false;
-    return;
-  }
 
   const minutes = Math.max(10, Math.min(todayTaskMinutes.value || 0, selectedTask.value.targetHours * 60));
 
-  const todayTask = {
-    id: `task-${selectedTask.value.id}-${Date.now()}`,
-    taskId: selectedTask.value.id,
-    text: selectedTask.value.title,
-    targetHours: selectedTask.value.targetHours,
-    todayTargetMinutes: minutes,
-    done: false
-  };
-
-  todos.push(todayTask);
-  localStorage.setItem(STORAGE_TODOS, JSON.stringify(todos));
-  ElMessage.success('已添加到今日任务');
-  addToTodayDialogVisible.value = false;
+  try {
+    await addTodayTask({
+      taskId: selectedTask.value.id,
+      title: selectedTask.value.title,
+      todayTargetMinutes: minutes,
+      accumulatedSeconds: 0,
+      done: false
+    });
+    ElMessage.success('已添加到今日任务');
+    addToTodayDialogVisible.value = false;
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || error?.message || '添加失败';
+    if (msg.includes('已存在') || msg.includes('已在')) {
+      ElMessage.warning('该任务已在今日任务中');
+    } else {
+      ElMessage.error(msg);
+    }
+  }
 };
 
 // 加载全量分类，供筛选使用

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai.study.mapper.TodayTaskMapper">
+
+    <resultMap id="TodayTaskResultMap" type="com.ai.study.domain.TodayTask">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="taskId" column="task_id" />
+        <result property="title" column="title" />
+        <result property="targetMinutes" column="target_minutes" />
+        <result property="accumulatedSeconds" column="accumulated_seconds" />
+        <result property="done" column="done" />
+        <result property="studyDate" column="study_date" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <!-- 插入新记录 -->
+    <insert id="insert" parameterType="com.ai.study.domain.TodayTask"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO today_task (user_id, task_id, title, target_minutes, accumulated_seconds, done, study_date, create_time, update_time)
+        VALUES (#{userId}, #{taskId}, #{title}, #{targetMinutes}, #{accumulatedSeconds}, #{done}, #{studyDate}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新记录 -->
+    <update id="update" parameterType="com.ai.study.domain.TodayTask">
+        UPDATE today_task
+        SET title = #{title},
+            target_minutes = #{targetMinutes},
+            accumulated_seconds = #{accumulatedSeconds},
+            done = #{done},
+            update_time = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 存在则更新，不存在则插入 -->
+    <insert id="upsert" parameterType="com.ai.study.domain.TodayTask"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO today_task (user_id, task_id, title, target_minutes, accumulated_seconds, done, study_date, create_time, update_time)
+        VALUES (#{userId}, #{taskId}, #{title}, #{targetMinutes}, #{accumulatedSeconds}, #{done}, #{studyDate}, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+            title = VALUES(title),
+            target_minutes = VALUES(target_minutes),
+            accumulated_seconds = VALUES(accumulated_seconds),
+            done = VALUES(done),
+            update_time = CURRENT_TIMESTAMP
+    </insert>
+
+    <select id="findById" resultMap="TodayTaskResultMap">
+        SELECT * FROM today_task WHERE id = #{id}
+    </select>
+
+    <select id="findByUserIdAndDate" resultMap="TodayTaskResultMap">
+        SELECT * FROM today_task
+        WHERE user_id = #{userId} AND study_date = #{studyDate}
+        ORDER BY id ASC
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM today_task WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByUserIdAndDate">
+        DELETE FROM today_task WHERE user_id = #{userId} AND study_date = #{studyDate}
+    </delete>
+
+</mapper>

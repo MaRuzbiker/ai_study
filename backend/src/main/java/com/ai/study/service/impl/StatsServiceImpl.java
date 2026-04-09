@@ -105,7 +105,7 @@ public class StatsServiceImpl implements StatsService {
         List<StudyRecord> todayRecords = studyRecordMapper.findByUserIdAndDateRange(userId, today, today);
 
         // 今日总秒数
-        long totalSeconds = todayRecords.stream().mapToLong(r -> r.getDurationMinutes() * 60L).sum();
+        long totalSeconds = todayRecords.stream().mapToLong(r -> r.getDurationSeconds() != null ? r.getDurationSeconds() : 0).sum();
 
         // 任务统计（来自 study_task 表）
         List<StudyTask> allTasks = studyTaskMapper.findAllByUserId(userId);

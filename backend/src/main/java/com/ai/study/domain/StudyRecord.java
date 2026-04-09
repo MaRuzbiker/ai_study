@@ -10,7 +10,7 @@ public class StudyRecord {
     private Long taskId;
     private Long userId;
     private LocalDate studyDate;
-    private Integer durationMinutes;
+    private Integer durationSeconds;
     private String comment;
     private LocalDateTime createTime;
 }

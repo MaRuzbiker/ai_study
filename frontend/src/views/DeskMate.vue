@@ -55,10 +55,37 @@
       </div>
     </el-card>
 
+    <!-- 详细统计表 -->
+    <el-card v-if="!notFound && deskMateInfo && hasChartData" class="stats-table-card">
+      <template #header>
+        <span>各任务学习明细</span>
+      </template>
+      <el-table :data="statsTableData" stripe style="width: 100%;">
+        <el-table-column prop="name" label="任务名称" min-width="140" />
+        <el-table-column prop="time" label="学习时长" width="120" align="center">
+          <template #default="{ row }">
+            <span style="font-weight: 600; color: #409EFF;">{{ row.time }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="占比" width="200" align="center">
+          <template #default="{ row }">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <el-progress
+                :percentage="row.percent"
+                :stroke-width="10"
+                :format="(p: number) => p + '%'"
+                style="width: 120px;"
+              />
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
     <!-- 饼状图 -->
     <el-card v-if="!notFound && deskMateInfo && hasChartData" class="chart-card">
       <template #header>
-        <span>今日时间分布</span>
+        <span>时间分布图</span>
       </template>
       <div ref="pieChartRef" class="pie-chart"></div>
     </el-card>
@@ -99,6 +126,19 @@ let pieChart: echarts.ECharts | null = null;
 const hasChartData = computed(() => {
   if (!deskMateInfo.value?.taskSeconds) return false;
   return Object.keys(deskMateInfo.value.taskSeconds).length > 0;
+});
+
+const statsTableData = computed(() => {
+  if (!deskMateInfo.value?.taskSeconds) return [];
+  const total = deskMateInfo.value.totalSeconds || 1;
+  return Object.entries(deskMateInfo.value.taskSeconds)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, seconds]) => ({
+      name,
+      time: formatTime(seconds),
+      percent: Math.round((seconds / total) * 100)
+    }));
 });
 
 const formatTime = (totalSeconds: number): string => {
@@ -304,6 +344,8 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 320px;
 }
+
+.stats-table-card { border-radius: 12px; }
 
 .empty-card { border-radius: 12px; }
 

@@ -8,15 +8,15 @@
         <result property="taskId" column="task_id" />
         <result property="userId" column="user_id" />
         <result property="studyDate" column="study_date" />
-        <result property="durationMinutes" column="duration_minutes" />
+        <result property="durationSeconds" column="duration_seconds" />
         <result property="comment" column="comment" />
         <result property="createTime" column="create_time" />
     </resultMap>
 
     <insert id="insert" parameterType="com.ai.study.domain.StudyRecord"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO study_record (task_id, user_id, study_date, duration_minutes, comment, create_time)
-        VALUES (#{taskId}, #{userId}, #{studyDate}, #{durationMinutes}, #{comment}, #{createTime})
+        INSERT INTO study_record (task_id, user_id, study_date, duration_seconds, comment, create_time)
+        VALUES (#{taskId}, #{userId}, #{studyDate}, #{durationSeconds}, #{comment}, #{createTime})
     </insert>
 
     <delete id="deleteById">
@@ -47,11 +47,11 @@
         ORDER BY sr.study_date DESC
     </select>
 
-    <!-- 按用户汇总每个任务的总学习时长 -->
+    <!-- 按用户汇总每个任务的总学习时长（秒） -->
     <select id="sumDurationByUserId" resultType="com.ai.study.dto.TaskProgressResponse">
         SELECT
             sr.task_id AS taskId,
-            SUM(sr.duration_minutes) AS totalMinutes
+            SUM(sr.duration_seconds) AS totalSeconds
         FROM study_record sr
         INNER JOIN study_task st ON sr.task_id = st.id
         WHERE st.user_id = #{userId}

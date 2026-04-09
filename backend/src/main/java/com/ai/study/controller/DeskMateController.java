@@ -1,10 +1,9 @@
 package com.ai.study.controller;
 
 import com.ai.study.common.Result;
-import com.ai.study.domain.StudyRecord;
+import com.ai.study.domain.TodayTask;
 import com.ai.study.domain.User;
-import com.ai.study.mapper.StudyRecordMapper;
-import com.ai.study.mapper.StudyTaskMapper;
+import com.ai.study.mapper.TodayTaskMapper;
 import com.ai.study.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,7 @@ import java.util.*;
 public class DeskMateController {
 
     private final UserMapper userMapper;
-    private final StudyRecordMapper studyRecordMapper;
-    private final StudyTaskMapper studyTaskMapper;
+    private final TodayTaskMapper todayTaskMapper;
 
     @GetMapping("/search")
     public Result<Map<String, Object>> searchByNickname(@RequestParam String nickname) {
@@ -33,37 +31,30 @@ public class DeskMateController {
         }
 
         long targetUserId = user.getId();
-
-        // 查询该用户的今日学习记录（通过 task JOIN，兼容历史数据）
         LocalDate today = LocalDate.now();
-        List<StudyRecord> todayRecords = studyRecordMapper.findByTaskUserIdAndDateRange(targetUserId, today, today);
 
-        // 获取用户所有任务（用于任务名称映射）
-        List<?> tasks = studyTaskMapper.findAllByUserId(targetUserId);
+        // 直接从今日任务表查实时数据（含标题和累计秒数）
+        List<TodayTask> tasks = todayTaskMapper.findByUserIdAndDate(targetUserId, today);
 
-        // 汇总今日各任务学习时长
+        // 汇总：按任务标题分组
         Map<String, Long> taskSeconds = new LinkedHashMap<>();
         long totalSeconds = 0;
-        for (StudyRecord r : todayRecords) {
-            // 任务名称优先用 task_id，找不到时用"任务ID"替代
-            String taskKey = "任务" + r.getTaskId();
-            long secs = r.getDurationMinutes() * 60L;
-            taskSeconds.merge(taskKey, secs, Long::sum);
+        for (TodayTask t : tasks) {
+            String name = (t.getTitle() != null && !t.getTitle().isBlank())
+                    ? t.getTitle()
+                    : "任务" + t.getTaskId();
+            long secs = t.getAccumulatedSeconds() != null ? t.getAccumulatedSeconds() : 0;
+            taskSeconds.merge(name, secs, Long::sum);
             totalSeconds += secs;
         }
-
-        // 同时从今日任务 localStorage 读取各任务累计秒数（同桌前端可能存的是 localStorage）
-        // 如果后端 study_record 有数据则以它为准，没有则返回 0
-
-        long totalMinutes = totalSeconds / 60;
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("userId", targetUserId);
         result.put("nickname", user.getNickname());
         result.put("totalSeconds", totalSeconds);
-        result.put("totalMinutes", totalMinutes);
+        result.put("totalMinutes", totalSeconds / 60);
         result.put("taskSeconds", taskSeconds);
-        result.put("recordCount", todayRecords.size());
+        result.put("recordCount", tasks.size());
 
         return Result.success(result);
     }
