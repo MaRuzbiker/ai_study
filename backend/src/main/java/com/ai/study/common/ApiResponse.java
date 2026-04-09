@@ -24,6 +24,11 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> error(int code, String message) {
         return new ApiResponse<>(code, message, null);
     }
+
+    /** 只传消息，默认 code=-1 */
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>(-1, message, null);
+    }
 }
 
 

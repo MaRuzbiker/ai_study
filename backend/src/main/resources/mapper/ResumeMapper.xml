@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai.study.mapper.ResumeMapper">
+
+    <resultMap id="ResumeResultMap" type="com.ai.study.domain.Resume">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="templateId" column="template_id" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ai.study.domain.Resume"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO resume (user_id, template_id, title, content, status, create_time, update_time)
+        VALUES (#{userId}, #{templateId}, #{title}, #{content}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update" parameterType="com.ai.study.domain.Resume">
+        UPDATE resume
+        <set>
+            <if test="templateId != null">template_id = #{templateId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM resume WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="ResumeResultMap">
+        SELECT * FROM resume WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="ResumeResultMap">
+        SELECT * FROM resume WHERE user_id = #{userId} ORDER BY update_time DESC
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM resume WHERE user_id = #{userId}
+    </select>
+
+</mapper>

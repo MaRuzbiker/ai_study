@@ -35,6 +35,9 @@
         <el-menu-item index="/deskmate">
           <span>👫 同桌学习</span>
         </el-menu-item>
+        <el-menu-item index="/resume">
+          <span>📄 简历中心</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

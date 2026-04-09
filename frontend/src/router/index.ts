@@ -14,6 +14,10 @@ const Achievements = () => import('@/views/Achievements.vue')
 const WordMemorize = () => import('@/views/WordMemorize.vue')
 const WrongBook = () => import('@/views/WrongBook.vue')
 const DeskMate = () => import('@/views/DeskMate.vue')
+const ResumeCenter = () => import('@/views/ResumeCenter.vue')
+const ResumeTemplate = () => import('@/views/ResumeTemplate.vue')
+const ResumeEdit = () => import('@/views/ResumeEdit.vue')
+const ResumeGenerate = () => import('@/views/ResumeGenerate.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -85,6 +89,30 @@ const routes: RouteRecordRaw[] = [
         path: 'deskmate',
         name: 'DeskMate',
         component: DeskMate,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'resume',
+        name: 'ResumeCenter',
+        component: ResumeCenter,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'resume/templates',
+        name: 'ResumeTemplate',
+        component: ResumeTemplate,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'resume/edit/:id?',
+        name: 'ResumeEdit',
+        component: ResumeEdit,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'resume/generate',
+        name: 'ResumeGenerate',
+        component: ResumeGenerate,
         meta: { requiresAuth: true }
       }
     ]
