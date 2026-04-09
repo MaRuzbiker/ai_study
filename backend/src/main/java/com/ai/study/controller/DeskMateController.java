@@ -1,10 +1,13 @@
 package com.ai.study.controller;
 
+import com.ai.study.common.ApiResponse;
 import com.ai.study.common.Result;
 import com.ai.study.domain.TodayTask;
+import com.ai.study.domain.WordProgress;
 import com.ai.study.domain.User;
 import com.ai.study.mapper.TodayTaskMapper;
 import com.ai.study.mapper.UserMapper;
+import com.ai.study.service.WordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +21,7 @@ public class DeskMateController {
 
     private final UserMapper userMapper;
     private final TodayTaskMapper todayTaskMapper;
+    private final WordService wordService;
 
     @GetMapping("/search")
     public Result<Map<String, Object>> searchByNickname(@RequestParam String nickname) {
@@ -57,5 +61,13 @@ public class DeskMateController {
         result.put("recordCount", tasks.size());
 
         return Result.success(result);
+    }
+
+    /** 查询指定用户的错词本 */
+    @GetMapping("/wrong-words/{userId}")
+    public ApiResponse<List<WordProgress>> getWrongWords(
+            @PathVariable Long userId,
+            @RequestParam(required = false, defaultValue = "2") Integer bookId) {
+        return ApiResponse.success(wordService.getWrongWords(userId, bookId));
     }
 }

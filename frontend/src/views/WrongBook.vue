@@ -2,13 +2,14 @@
   <div class="wrong-book-page">
     <!-- 顶部 -->
     <header class="page-header">
-      <button class="back-btn" @click="$router.push('/words')">
+      <button class="back-btn" @click="goBack">
         <i class="el-icon-arrow-left"></i>
       </button>
-      <h1 class="page-title">我的错词本</h1>
-      <button class="clear-btn" @click="confirmClear" :disabled="wrongWords.length === 0">
+      <h1 class="page-title">{{ pageTitle }}</h1>
+      <button v-if="!viewingOther" class="clear-btn" @click="confirmClear" :disabled="wrongWords.length === 0">
         <i class="el-icon-delete"></i> 清空
       </button>
+      <div v-else style="width: 60px;"></div>
     </header>
 
     <!-- 词书筛选 -->
@@ -66,9 +67,9 @@
 
     <!-- 空状态 -->
     <div v-else class="empty-state">
-      <div class="empty-icon">🎉</div>
-      <div class="empty-text">太棒了！暂无错词</div>
-      <button class="start-learn-btn" @click="$router.push('/words')">
+      <div class="empty-icon">{{ viewingOther ? '📚' : '🎉' }}</div>
+      <div class="empty-text">{{ viewingOther ? `${targetNickname} 暂无错词` : '太棒了！暂无错词' }}</div>
+      <button v-if="!viewingOther" class="start-learn-btn" @click="$router.push('/words')">
         去背单词
       </button>
     </div>
@@ -91,7 +92,7 @@
           </div>
         </div>
 
-        <div class="detail-actions">
+        <div v-if="!viewingOther" class="detail-actions">
           <button class="master-btn" @click="markMastered">
             <i class="el-icon-check"></i> 已掌握
           </button>
@@ -104,7 +105,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { get, del } from '@/api/index';
 
@@ -120,6 +122,9 @@ interface WrongWord {
   status: string;
 }
 
+const route = useRoute();
+const router = useRouter();
+
 const books = ref<WordBook[]>([]);
 const selectedBookId = ref<number>(2);
 const wrongWords = ref<WrongWord[]>([]);
@@ -127,12 +132,28 @@ const showDetailModal = ref(false);
 const currentItem = ref<WrongWord>({} as WrongWord);
 const totalWrong = ref(0);
 
+// 查看其他用户错词本
+const targetUserId = computed(() => route.query.userId ? Number(route.query.userId) : null);
+const targetNickname = computed(() => route.query.nickname as string || '');
+const viewingOther = computed(() => !!targetUserId.value);
+const pageTitle = computed(() => viewingOther.value ? `${targetNickname.value} 的错词本` : '我的错词本');
+
+const goBack = () => {
+  if (viewingOther.value) {
+    router.push('/deskmate');
+  } else {
+    router.push('/words');
+  }
+};
+
 const loadBooks = async () => {
   try {
     const res = await get<WordBook[]>('/words/books');
     if (res.code === 0) {
       books.value = res.data || [];
-      selectedBookId.value = 2;
+      // 默认选中 CET-6
+      const cet6 = books.value.find(b => b.name.includes('六级') || b.id === 2);
+      selectedBookId.value = cet6?.id || 2;
       loadWrongWords();
     }
   } catch (e) { console.error(e); }
@@ -141,7 +162,14 @@ const loadBooks = async () => {
 const loadWrongWords = async () => {
   if (!selectedBookId.value) return;
   try {
-    const res = await get<WrongWord[]>('/words/wrong-book/' + selectedBookId.value);
+    let res;
+    if (viewingOther.value && targetUserId.value) {
+      // 查看其他用户的错词本
+      res = await get<WrongWord[]>(`/deskmate/wrong-words/${targetUserId.value}`, { bookId: selectedBookId.value });
+    } else {
+      // 查看自己的错词本
+      res = await get<WrongWord[]>('/words/wrong-book/' + selectedBookId.value);
+    }
     if (res.code === 0) {
       wrongWords.value = res.data || [];
       totalWrong.value = wrongWords.value.reduce((sum, w) => sum + (w.wrongCount || 0), 0);

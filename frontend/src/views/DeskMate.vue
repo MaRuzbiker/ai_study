@@ -1,110 +1,123 @@
 <template>
-  <div class="deskmate">
-    <el-card class="search-card">
-      <template #header>
-        <div class="card-header">
-          <span>同桌学习</span>
+  <div class="deskmate-container">
+    <div class="deskmate">
+      <el-card class="search-card">
+        <template #header>
+          <div class="card-header">
+            <span>同桌学习</span>
+          </div>
+        </template>
+        <div class="search-area">
+          <el-input
+            v-model="searchNickname"
+            placeholder="输入对方昵称，查询今日学习情况"
+            size="large"
+            clearable
+            @keyup.enter="search"
+            style="max-width: 400px;"
+          >
+            <template #prefix>
+              <i class="el-icon-user"></i>
+            </template>
+          </el-input>
+          <el-button type="primary" size="large" :loading="loading" @click="search">
+            查询
+          </el-button>
         </div>
-      </template>
-      <div class="search-area">
-        <el-input
-          v-model="searchNickname"
-          placeholder="输入对方昵称，查询今日学习情况"
-          size="large"
-          clearable
-          @keyup.enter="search"
-          style="max-width: 400px;"
-        >
-          <template #prefix>
-            <i class="el-icon-user"></i>
-          </template>
-        </el-input>
-        <el-button type="primary" size="large" :loading="loading" @click="search">
-          查询
-        </el-button>
-      </div>
-      <div v-if="searched" class="result-tip">
-        <span v-if="notFound" class="not-found">未找到该昵称的用户</span>
-        <span v-else class="found">
-          <i class="el-icon-user"></i> {{ deskMateInfo?.nickname }} 的今日学习情况
-        </span>
-      </div>
-    </el-card>
-
-    <!-- 同桌信息 -->
-    <el-card v-if="!notFound && deskMateInfo" class="info-card">
-      <div class="desk-header">
-        <div class="desk-avatar">
-          <i class="el-icon-user-solid"></i>
+        <div v-if="searched" class="result-tip">
+          <span v-if="notFound" class="not-found">未找到该昵称的用户</span>
+          <span v-else class="found">
+            <i class="el-icon-user"></i> {{ deskMateInfo?.nickname }} 的今日学习情况
+          </span>
         </div>
-        <div class="desk-info">
-          <div class="desk-name">{{ deskMateInfo.nickname }}</div>
-          <div class="desk-sub">同桌学习 · 今日数据</div>
+      </el-card>
+
+      <!-- 同桌信息 -->
+      <el-card v-if="!notFound && deskMateInfo" class="info-card">
+        <div class="desk-header">
+          <div class="desk-avatar">
+            <i class="el-icon-user-solid"></i>
+          </div>
+          <div class="desk-info">
+            <div class="desk-name">{{ deskMateInfo.nickname }}</div>
+            <div class="desk-sub">同桌学习 · 今日数据</div>
+          </div>
+          <el-button 
+            type="success" 
+            size="small" 
+            @click="goToWrongBook"
+            style="margin-left: auto;"
+          >
+            查看错词本
+          </el-button>
         </div>
-      </div>
 
-      <div class="stats-row">
-        <div class="stat-item">
-          <div class="stat-value">{{ formatTime(deskMateInfo.totalSeconds) }}</div>
-          <div class="stat-label">今日学习时长</div>
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-value">{{ formatTime(deskMateInfo.totalSeconds) }}</div>
+            <div class="stat-label">今日学习时长</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ deskMateInfo.recordCount }}</div>
+            <div class="stat-label">今日学习记录</div>
+          </div>
         </div>
-        <div class="stat-item">
-          <div class="stat-value">{{ deskMateInfo.recordCount }}</div>
-          <div class="stat-label">今日学习记录</div>
+      </el-card>
+
+      <!-- 详细统计表 -->
+      <el-card v-if="!notFound && deskMateInfo && hasChartData" class="stats-table-card">
+        <template #header>
+          <span>各任务学习明细</span>
+        </template>
+        <el-table :data="statsTableData" stripe style="width: 100%;">
+          <el-table-column prop="name" label="任务名称" min-width="140" />
+          <el-table-column prop="time" label="学习时长" width="120" align="center">
+            <template #default="{ row }">
+              <span style="font-weight: 600; color: #409EFF;">{{ row.time }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="占比" width="200" align="center">
+            <template #default="{ row }">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <el-progress
+                  :percentage="row.percent"
+                  :stroke-width="10"
+                  :format="(p: number) => p + '%'"
+                  style="width: 120px;"
+                />
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
+      <!-- 饼状图 -->
+      <el-card v-if="!notFound && deskMateInfo && hasChartData" class="chart-card">
+        <template #header>
+          <span>时间分布图</span>
+        </template>
+        <div ref="pieChartRef" class="pie-chart"></div>
+      </el-card>
+
+      <!-- 无数据提示 -->
+      <el-card v-if="!notFound && deskMateInfo && !hasChartData" class="empty-card">
+        <div class="empty-tip">
+          <i class="el-icon-warning-outline"></i>
+          <p>{{ deskMateInfo.nickname }} 今日暂无学习记录</p>
         </div>
-      </div>
-    </el-card>
-
-    <!-- 详细统计表 -->
-    <el-card v-if="!notFound && deskMateInfo && hasChartData" class="stats-table-card">
-      <template #header>
-        <span>各任务学习明细</span>
-      </template>
-      <el-table :data="statsTableData" stripe style="width: 100%;">
-        <el-table-column prop="name" label="任务名称" min-width="140" />
-        <el-table-column prop="time" label="学习时长" width="120" align="center">
-          <template #default="{ row }">
-            <span style="font-weight: 600; color: #409EFF;">{{ row.time }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="占比" width="200" align="center">
-          <template #default="{ row }">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <el-progress
-                :percentage="row.percent"
-                :stroke-width="10"
-                :format="(p: number) => p + '%'"
-                style="width: 120px;"
-              />
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- 饼状图 -->
-    <el-card v-if="!notFound && deskMateInfo && hasChartData" class="chart-card">
-      <template #header>
-        <span>时间分布图</span>
-      </template>
-      <div ref="pieChartRef" class="pie-chart"></div>
-    </el-card>
-
-    <!-- 无数据提示 -->
-    <el-card v-if="!notFound && deskMateInfo && !hasChartData" class="empty-card">
-      <div class="empty-tip">
-        <i class="el-icon-warning-outline"></i>
-        <p>{{ deskMateInfo.nickname }} 今日暂无学习记录</p>
-      </div>
-    </el-card>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onBeforeUnmount, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import * as echarts from 'echarts';
 import { get } from '@/api/index';
+
+const router = useRouter();
 
 interface DeskMateInfo {
   userId: number;
@@ -188,6 +201,17 @@ const search = async () => {
   }
 };
 
+const goToWrongBook = () => {
+  if (!deskMateInfo.value) return;
+  router.push({
+    path: '/wrong-book',
+    query: {
+      userId: deskMateInfo.value.userId,
+      nickname: deskMateInfo.value.nickname
+    }
+  });
+};
+
 const renderPieChart = () => {
   if (!pieChartRef.value || !deskMateInfo.value?.taskSeconds) return;
 
@@ -248,10 +272,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.deskmate-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
 .deskmate {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
   max-width: 800px;
 }
 
