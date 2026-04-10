@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,19 +31,12 @@ public class WordServiceImpl implements WordService {
 
     @Override
     public List<Word> getRandomWords(Integer bookId, int limit, Long userId) {
-        // Get all progress records for this user and book to filter out mastered words
+        // Get all progress records for this user and book
         List<WordProgress> progressList = wordProgressMapper.selectByUserAndBook(userId, bookId);
         Set<Long> masteredIds = progressList.stream()
                 .filter(p -> "MASTERED".equals(p.getStatus()))
                 .map(WordProgress::getWordId)
                 .collect(Collectors.toSet());
-
-        // Get all words for this book
-        List<Word> allWords = wordMapper.selectByBookId(bookId);
-        // Filter out mastered words
-        List<Word> available = allWords.stream()
-                .filter(w -> !masteredIds.contains(w.getId()))
-                .collect(Collectors.toList());
 
         // Prioritize wrong words (wrong_count > 0, not mastered)
         Set<Long> wrongIds = progressList.stream()
@@ -50,21 +44,28 @@ public class WordServiceImpl implements WordService {
                 .map(WordProgress::getWordId)
                 .collect(Collectors.toSet());
 
-        List<Word> wrongWords = available.stream()
-                .filter(w -> wrongIds.contains(w.getId()))
-                .collect(Collectors.toList());
-
-        // Shuffle and pick: prioritize wrong words, then fill rest with random
-        java.util.Collections.shuffle(wrongWords);
-        List<Word> otherWords = available.stream()
-                .filter(w -> !wrongIds.contains(w.getId()))
-                .collect(Collectors.toList());
-        java.util.Collections.shuffle(otherWords);
-
-        // Combine: wrong words first, then other words
         List<Word> result = new java.util.ArrayList<>();
-        result.addAll(wrongWords);
-        result.addAll(otherWords);
+
+        if (!wrongIds.isEmpty()) {
+            // Get wrong words first
+            List<Word> wrongWords = wordMapper.selectWordsByIds(new ArrayList<>(wrongIds));
+            java.util.Collections.shuffle(wrongWords);
+            result.addAll(wrongWords);
+        }
+
+        // Calculate remaining words needed
+        int remaining = limit - result.size();
+        if (remaining > 0) {
+            // Exclude mastered words and wrong words (already added)
+            Set<Long> excludeIds = new HashSet<>(masteredIds);
+            excludeIds.addAll(wrongIds);
+            
+            // Get random words excluding mastered and wrong words
+            List<Word> randomWords = wordMapper.selectRandomWordsExcludeIds(bookId, remaining, new ArrayList<>(excludeIds));
+            result.addAll(randomWords);
+        }
+
+        // Limit to requested count
         return result.stream().limit(limit).collect(Collectors.toList());
     }
 

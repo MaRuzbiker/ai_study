@@ -30,25 +30,18 @@
       <div class="entry-section">
         <div class="entry-title">创建新简历</div>
         <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="entry-card" @click="router.push('/resume/templates')">
-              <div class="entry-icon">&#128203;</div>
-              <div class="entry-name">选择模板</div>
-              <div class="entry-desc">从精美模板库中选择</div>
-            </div>
-          </el-col>
-          <el-col :span="8">
+          <el-col :span="12">
             <div class="entry-card" @click="router.push('/resume/edit')">
               <div class="entry-icon">&#9998;</div>
               <div class="entry-name">手动填写</div>
               <div class="entry-desc">从空白表单开始编辑</div>
             </div>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="12">
             <div class="entry-card ai-entry" @click="router.push('/resume/generate')">
               <div class="entry-icon">&#129302;</div>
-              <div class="entry-name">AI 一键生成</div>
-              <div class="entry-desc">输入关键词 AI 自动生成</div>
+              <div class="entry-name">AI 识别简历</div>
+              <div class="entry-desc">上传简历生成学习建议</div>
             </div>
           </el-col>
         </el-row>
@@ -75,9 +68,8 @@
         <div class="empty-text">还没有简历</div>
         <div class="empty-sub">点击上方按钮创建你的第一份简历</div>
         <div class="quick-entry">
-          <el-button type="primary" @click="router.push('/resume/templates')">选择模板</el-button>
-          <el-button @click="router.push('/resume/edit')">手动填写</el-button>
-          <el-button type="success" @click="router.push('/resume/generate')">AI 生成</el-button>
+          <el-button type="primary" @click="router.push('/resume/edit')">手动填写</el-button>
+          <el-button type="success" @click="router.push('/resume/generate')">AI 识别</el-button>
         </div>
       </div>
 

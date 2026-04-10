@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -141,5 +142,55 @@ public class AiServiceImpl implements AiService {
     @Override
     public String chat(String question) {
         return callAi(question);
+    }
+    
+    @Override
+    public String analyzeResume(Long userId, Map<String, Object> request) {
+        // 构建简历信息
+        StringBuilder resumeInfo = new StringBuilder();
+        
+        // 提取手动填写的信息
+        if (request.containsKey("name")) {
+            resumeInfo.append("姓名: ").append(request.get("name")).append("\n");
+        }
+        if (request.containsKey("position")) {
+            resumeInfo.append("目标职位: ").append(request.get("position")).append("\n");
+        }
+        if (request.containsKey("workYears")) {
+            resumeInfo.append("工作年限: ").append(request.get("workYears")).append("\n");
+        }
+        if (request.containsKey("skills")) {
+            resumeInfo.append("技能清单: ").append(request.get("skills")).append("\n");
+        }
+        if (request.containsKey("experience")) {
+            resumeInfo.append("工作经历: ").append(request.get("experience")).append("\n");
+        }
+        
+        // 如果有文件上传的信息
+        if (request.containsKey("file")) {
+            resumeInfo.append("已上传简历文件\n");
+        }
+        
+        String prompt = """
+                你是一名专业的技术学习规划顾问。请直接分析以下简历信息，不要询问任何问题，直接提供详细的学习建议。
+                
+                简历信息：
+                %s
+                
+                请按照以下结构直接输出分析结果：
+                1. 技术背景评估：分析求职者的技术栈和知识结构
+                2. 核心优势：列出技术方面的强项
+                3. 知识短板：指出需要补充的技术知识点
+                4. 学习建议：针对短板提供具体的知识点学习计划，包括：
+                   - 需要学习的具体技术知识点
+                   - 推荐的学习资源（官方文档、教程、书籍）
+                   - 学习顺序和优先级
+                   - 实践项目建议
+                5. 技能提升路径：提供3-6个月的技术技能提升规划
+                
+                请用中文回答，重点关注技术知识点的学习建议，给出具体、可执行的学习方案。不要包含任何询问或确认信息。
+                """.formatted(resumeInfo.toString());
+        
+        return callAi(prompt);
     }
 }

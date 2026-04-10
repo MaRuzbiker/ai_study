@@ -48,4 +48,10 @@ public class AiController {
                 Map.of("value", "qwen-max", "label", "千问 Max", "desc", "最强能力，复杂任务首选")
         ));
     }
+
+    @Operation(summary = "分析简历生成学习建议")
+    @PostMapping("/resume/analyze")
+    public ApiResponse<String> analyzeResume(@RequestBody Map<String, Object> request) {
+        return ApiResponse.success(aiService.analyzeResume(getCurrentUserId(), request));
+    }
 }

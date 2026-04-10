@@ -17,6 +17,11 @@ export const getAvailableModels = (): Promise<ApiResponse<AiModel[]>> => {
   return get<AiModel[]>('/ai/models');
 };
 
+// 分析简历生成学习建议
+export const analyzeResume = (data: any): Promise<ApiResponse<string>> => {
+  return post<string>('/ai/resume/analyze', data);
+};
+
 
 
 

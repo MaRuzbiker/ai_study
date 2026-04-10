@@ -18,4 +18,40 @@
         SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
         FROM word WHERE id = #{id}
     </select>
+
+    <select id="selectWordsByIds" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectRandomWordsExcludeMastered" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word 
+        WHERE book_id = #{bookId}
+        <if test="masteredIds != null and masteredIds.size() > 0">
+            AND id NOT IN
+            <foreach collection="masteredIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectRandomWordsExcludeIds" resultType="com.ai.study.domain.Word">
+        SELECT id, book_id AS bookId, word, phonetic, meaning, sort_order AS sortOrder
+        FROM word 
+        WHERE book_id = #{bookId}
+        <if test="excludeIds != null and excludeIds.size() > 0">
+            AND id NOT IN
+            <foreach collection="excludeIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY RAND()
+        LIMIT #{limit}
+    </select>
 </mapper>

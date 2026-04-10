@@ -214,7 +214,7 @@ const modes = [
 ];
 
 const books = ref<WordBook[]>([]);
-const selectedBookId = ref<number>(2);
+const selectedBookId = ref<number>(5);
 const showLearning = ref(false);
 const showSettings = ref(false);
 const settings = ref({ dailyGoal: 20, reminderTime: '' });
