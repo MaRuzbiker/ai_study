@@ -35,6 +35,28 @@
 
       <div v-if="data.education?.length" class="divider divider-light"></div>
 
+      <!-- 校园经历 -->
+      <div v-if="data.campusExperiences && data.campusExperiences.length" class="tpl-section">
+        <div class="minimal-label">校园经历</div>
+        <div v-for="(c, idx) in data.campusExperiences" :key="idx" class="minimal-item">
+          <div class="minimal-item-row"><span class="minimal-item-title">{{ c.organization }}</span><span class="minimal-item-date">{{ c.startDate }} — {{ c.endDate || '至今' }}</span></div>
+          <div class="minimal-item-sub">{{ c.role }}</div>
+          <div v-if="c.description" class="minimal-item-desc">{{ c.description }}</div>
+        </div>
+      </div>
+
+      <!-- 竞赛经历 -->
+      <div v-if="data.competitions && data.competitions.length" class="tpl-section">
+        <div class="minimal-label">竞赛经历</div>
+        <div v-for="(comp, idx) in data.competitions" :key="idx" class="minimal-item">
+          <div class="minimal-item-row"><span class="minimal-item-title">{{ comp.name }}</span><span class="minimal-item-date">{{ comp.date }}</span></div>
+          <div v-if="comp.level" class="minimal-item-sub">{{ comp.level }} · {{ comp.rank || '' }}</div>
+          <div v-if="comp.description" class="minimal-item-desc">{{ comp.description }}</div>
+        </div>
+      </div>
+
+      <div v-if="data.campusExperiences?.length || data.competitions?.length" class="divider divider-light"></div>
+
       <!-- 工作经历 -->
       <div v-if="data.experience && data.experience.length" class="tpl-section">
         <div class="section-label">工作经历</div>
@@ -68,6 +90,28 @@
       </div>
 
       <div v-if="data.projects?.length" class="divider divider-light"></div>
+
+      <!-- 荣誉奖励 -->
+      <div v-if="data.awards && data.awards.length" class="tpl-section">
+        <div class="minimal-label">荣誉奖励</div>
+        <div class="minimal-awards">
+          <div v-for="(aw, idx) in data.awards" :key="idx" class="minimal-award-row">
+            <span>{{ aw.name }}</span>
+            <span v-if="aw.date" class="minimal-date">{{ aw.date }}</span>
+            <span v-if="aw.level" class="minimal-level">{{ aw.level }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 证书 -->
+      <div v-if="data.certificates && data.certificates.length" class="tpl-section">
+        <div class="minimal-label">证书资质</div>
+        <div class="minimal-certs">
+          <span v-for="(cert, idx) in data.certificates" :key="idx" class="minimal-cert">{{ cert.name }}</span>
+        </div>
+      </div>
+
+      <div v-if="data.awards?.length || data.certificates?.length" class="divider divider-light"></div>
 
       <!-- 专业技能 -->
       <div v-if="data.skills && data.skills.length" class="tpl-section">
@@ -247,4 +291,27 @@ defineProps<{ data: Record<string, any> }>()
   border-left: 2px solid #ccc;
   padding-left: 16px;
 }
+
+/* 简约风格新模块 */
+.minimal-section { margin-bottom: 20px; }
+.minimal-label {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.minimal-item { margin-bottom: 14px; }
+.minimal-item-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.minimal-item-title { font-size: 14px; font-weight: 600; color: #111; }
+.minimal-item-date { font-size: 12px; color: #aaa; }
+.minimal-item-sub { font-size: 12.5px; color: #666; margin-bottom: 3px; }
+.minimal-item-desc { font-size: 12.5px; color: #444; line-height: 1.7; }
+.minimal-awards { border-left: 2px solid #e0e0e0; padding-left: 14px; }
+.minimal-award-row { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: #333; margin-bottom: 6px; }
+.minimal-date { font-size: 11px; color: #aaa; }
+.minimal-level { font-size: 11px; color: #888; background: #f0f0f0; padding: 1px 7px; border-radius: 3px; }
+.minimal-certs { display: flex; flex-wrap: wrap; gap: 8px; }
+.minimal-cert { font-size: 12.5px; color: #555; border: 1px solid #ddd; padding: 3px 10px; border-radius: 3px; }
 </style>

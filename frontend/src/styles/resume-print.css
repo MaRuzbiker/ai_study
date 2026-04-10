@@ -1,0 +1,123 @@
+/* 简历打印样式 - 用于 PDF 导出 */
+
+@media print {
+  /* 页面设置 */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 隐藏非简历内容 */
+  body * {
+    visibility: hidden;
+  }
+
+  /* 只显示简历内容 */
+  .resume-print-shell,
+  .resume-print-shell * {
+    visibility: visible;
+  }
+
+  .resume-print-shell {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff;
+  }
+
+  /* 隐藏工具栏和导航 */
+  .edit-toolbar,
+  .edit-header,
+  .preview-toolbar,
+  .module-list-panel,
+  .preview-header,
+  nav,
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 简历容器全宽 */
+  .resume-content,
+  .tpl-modern,
+  .tpl-classic-new,
+  .tpl-simple,
+  .tpl-card,
+  .tpl-business {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 20mm !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* 确保颜色正确打印 */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* 分页控制 */
+  .section,
+  .item,
+  .timeline-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 链接显示 URL */
+  a[href]:after {
+    content: none !important;
+  }
+
+  /* 优化图片打印 */
+  img {
+    max-width: 100% !important;
+  }
+
+  /* 技能进度条 */
+  .skill-bar {
+    background-color: #f0f0f0 !important;
+  }
+
+  .skill-progress {
+    background-color: currentColor !important;
+  }
+}
+
+/* 打印时的辅助类 */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+}

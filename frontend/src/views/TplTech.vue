@@ -105,6 +105,44 @@
         <div class="summary-text">{{ data.summary }}</div>
       </div>
 
+      <!-- 校园经历 -->
+      <div v-if="data.campusExperiences && data.campusExperiences.length" class="tech-section">
+        <div class="tech-sec-title">// 校园经历</div>
+        <div v-for="(c, idx) in data.campusExperiences" :key="idx" class="tech-item">
+          <div class="tech-item-header"><span class="tech-item-title">{{ c.organization }}</span><span class="tech-item-date">{{ c.startDate }} — {{ c.endDate || '至今' }}</span></div>
+          <div class="tech-item-sub">{{ c.role }}</div>
+          <div v-if="c.description" class="tech-item-desc">{{ c.description }}</div>
+        </div>
+      </div>
+
+      <!-- 竞赛经历 -->
+      <div v-if="data.competitions && data.competitions.length" class="tech-section">
+        <div class="tech-sec-title">// 竞赛经历</div>
+        <div v-for="(comp, idx) in data.competitions" :key="idx" class="tech-item">
+          <div class="tech-item-header"><span class="tech-item-title">{{ comp.name }}</span><span class="tech-item-date">{{ comp.date }}</span></div>
+          <div v-if="comp.level" class="tech-item-sub">{{ comp.level }} · {{ comp.rank || '' }}</div>
+          <div v-if="comp.description" class="tech-item-desc">{{ comp.description }}</div>
+        </div>
+      </div>
+
+      <!-- 荣誉奖励 -->
+      <div v-if="data.awards && data.awards.length" class="tech-section">
+        <div class="tech-sec-title">// 荣誉奖励</div>
+        <div class="tech-awards">
+          <span v-for="(aw, idx) in data.awards" :key="idx" class="tech-award-tag">
+            {{ aw.name }}<span v-if="aw.level"> [{{ aw.level }}]</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 证书 -->
+      <div v-if="data.certificates && data.certificates.length" class="tech-section">
+        <div class="tech-sec-title">// 证书资质</div>
+        <div class="tech-cert-list">
+          <span v-for="(cert, idx) in data.certificates" :key="idx" class="tech-cert-tag">{{ cert.name }}</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -297,5 +335,43 @@ defineProps<{ data: Record<string, any> }>()
   padding: 10px 16px;
   border-radius: 0 4px 4px 0;
   font-family: 'Consolas', monospace;
+}
+
+/* 科技风格新模块 */
+.tech-section { margin-bottom: 18px; }
+.tech-sec-title {
+  font-size: 13px;
+  color: #1976d2;
+  font-family: 'Courier New', Courier, monospace;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e3f2fd;
+}
+.tech-item { margin-bottom: 12px; }
+.tech-item-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.tech-item-title { font-size: 13.5px; font-weight: 700; color: #0d47a1; }
+.tech-item-date { font-size: 11px; color: #78909c; }
+.tech-item-sub { font-size: 12px; color: #1565c0; font-style: italic; margin-bottom: 3px; }
+.tech-item-desc { font-size: 12.5px; color: #546e7a; line-height: 1.6; }
+.tech-awards { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-award-tag {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+.tech-cert-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-cert-tag {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #90caf9;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
 }
 </style>

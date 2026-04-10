@@ -1,303 +1,368 @@
 <template>
-  <div class="tpl-classic">
-    <!-- ========== 头部 ========== -->
-    <div class="tpl-header">
-      <div class="tpl-name">{{ data.personal?.name || '姓名' }}</div>
-      <div class="tpl-contact">
-        <span v-if="data.personal?.phone">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.2 19.79 19.79 0 0 1 1.61 3.61 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55A16 16 0 0 0 15 15.09l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          {{ data.personal.phone }}
-        </span>
-        <span v-if="data.personal?.email">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          {{ data.personal.email }}
-        </span>
-        <span v-if="data.personal?.targetPosition">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          {{ data.personal.targetPosition }}
-        </span>
-      </div>
-    </div>
-
-    <!-- ========== 主体内容 ========== -->
-    <div class="tpl-body">
-
-      <!-- 自我评价 -->
-      <div v-if="data.summary" class="tpl-section">
-        <div class="section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          自我评价
-        </div>
-        <div class="section-content summary-content">{{ data.summary }}</div>
-      </div>
-
-      <!-- 教育背景 -->
-      <div v-if="data.education && data.education.length" class="tpl-section">
-        <div class="section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          教育背景
-        </div>
-        <div class="timeline">
-          <div v-for="(edu, idx) in data.education" :key="idx" class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="item-header">
-                <span class="item-title">{{ edu.school }}</span>
-                <span class="item-date">{{ edu.startDate }} — {{ edu.endDate || '至今' }}</span>
-              </div>
-              <div class="item-sub">{{ edu.degree }} · {{ edu.major }}</div>
-              <div v-if="edu.gpa" class="item-desc">GPA：{{ edu.gpa }}</div>
+  <div class="template2-resume resume-content">
+    <div class="basic-info">
+      <div class="profile">
+        <div class="profile-info">
+          <div v-if="data.personal?.name" class="name">{{ data.personal.name }}</div>
+          <div class="profile-list">
+            <div v-if="data.personal?.phone" class="mobile">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" :stroke="themeColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.2 19.79 19.79 0 0 1 1.61 3.61 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55A16 16 0 0 0 15 15.09l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              {{ data.personal.phone }}
             </div>
+            <div v-if="data.personal?.email" class="email">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" :stroke="themeColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              {{ data.personal.email }}
+            </div>
+            <div v-if="data.personal?.github" class="github">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" :stroke="themeColor" stroke-width="2">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+              </svg>
+              {{ data.personal.github }}
+            </div>
+            <div v-if="data.personal?.targetPosition" class="expect-job">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" :stroke="themeColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              职位：{{ data.personal.targetPosition }}
+            </div>
+          </div>
+        </div>
+        <div v-if="!data.avatar?.hidden" class="avatar-section">
+          <div class="avatar" :class="data.avatar?.shape || 'circle'">
+            <img v-if="data.avatar?.src" :src="data.avatar.src" alt="avatar" />
+            <span v-else class="avatar-placeholder">{{ getInitial(data.personal?.name) }}</span>
           </div>
         </div>
       </div>
 
-      <!-- 工作经历 -->
-      <div v-if="data.experience && data.experience.length" class="tpl-section">
+      <!-- 教育背景 -->
+      <div v-if="data.education && data.education.length" class="section section-education">
         <div class="section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          工作经历
+          <div class="title">教育背景</div>
+          <div class="title-addon"></div>
         </div>
-        <div class="timeline">
-          <div v-for="(exp, idx) in data.experience" :key="idx" class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="item-header">
-                <span class="item-title">{{ exp.company }}</span>
-                <span class="item-date">{{ exp.startDate }} — {{ exp.endDate || '至今' }}</span>
-              </div>
-              <div class="item-sub">{{ exp.position }}</div>
-              <div v-if="exp.description" class="item-desc">{{ exp.description }}</div>
+        <div class="section-content">
+          <div v-for="(edu, idx) in data.education" :key="idx" class="education-item">
+            <div class="section-info">
+              <span class="info-name">{{ edu.school }}</span>
+              <span class="info-time">{{ edu.startDate }} — {{ edu.endDate || '至今' }}</span>
             </div>
+            <div class="sub-info">{{ edu.degree }} · {{ edu.major }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自我介绍 -->
+      <div v-if="data.summary" class="section section-aboutme">
+        <div class="section-title">
+          <div class="title">自我介绍</div>
+          <div class="title-addon"></div>
+        </div>
+        <div class="section-content">
+          <div class="aboutme-item">{{ data.summary }}</div>
+        </div>
+      </div>
+
+      <!-- 专业技能 -->
+      <div v-if="data.skills && data.skills.length" class="section section-skill">
+        <div class="section-title">
+          <div class="title">专业技能</div>
+          <div class="title-addon"></div>
+        </div>
+        <div class="section-content">
+          <div v-for="(skill, idx) in data.skills" :key="idx" class="skill-item">
+            <span class="skill-name">{{ skill }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-info">
+      <!-- 工作经历 -->
+      <div v-if="data.experience && data.experience.length" class="section section-work-exp">
+        <div class="section-title">
+          <div class="title">工作经历</div>
+          <div class="title-addon"></div>
+        </div>
+        <div class="section-content">
+          <div v-for="(exp, idx) in data.experience" :key="idx" class="section-item">
+            <div class="section-info">
+              <span class="company">{{ exp.company }}</span>
+              <span class="info-time">{{ exp.startDate }} — {{ exp.endDate || '至今' }}</span>
+            </div>
+            <div class="sub-info">{{ exp.position }}</div>
+            <div v-if="exp.description" class="work-description">{{ exp.description }}</div>
           </div>
         </div>
       </div>
 
       <!-- 项目经历 -->
-      <div v-if="data.projects && data.projects.length" class="tpl-section">
+      <div v-if="data.projects && data.projects.length" class="section section-project">
         <div class="section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          项目经历
+          <div class="title">项目经历</div>
+          <div class="title-addon"></div>
         </div>
-        <div class="timeline">
-          <div v-for="(proj, idx) in data.projects" :key="idx" class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="item-header">
-                <span class="item-title">{{ proj.name }}</span>
-                <span class="item-date">{{ proj.startDate }} — {{ proj.endDate || '至今' }}</span>
-              </div>
-              <div class="item-sub" v-if="proj.role">{{ proj.role }}</div>
-              <div v-if="proj.description" class="item-desc">{{ proj.description }}</div>
-              <div v-if="proj.achievements" class="item-achievement">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>
-                {{ proj.achievements }}
-              </div>
+        <div class="section-content">
+          <div v-for="(proj, idx) in data.projects" :key="idx" class="section-item">
+            <div class="section-info">
+              <span class="project-name">{{ proj.name }}</span>
+              <span class="info-time">{{ proj.startDate }} — {{ proj.endDate || '至今' }}</span>
             </div>
+            <div v-if="proj.role" class="sub-info">{{ proj.role }}</div>
+            <div v-if="proj.description" class="project-content">{{ proj.description }}</div>
           </div>
         </div>
       </div>
-
-      <!-- 专业技能 -->
-      <div v-if="data.skills && data.skills.length" class="tpl-section">
-        <div class="section-title">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          专业技能
-        </div>
-        <div class="skill-tags">
-          <span v-for="(skill, idx) in data.skills" :key="idx" class="skill-tag">{{ skill }}</span>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ data: Record<string, any> }>()
+import { computed } from 'vue'
+
+const props = defineProps<{ 
+  data: Record<string, any>
+  theme?: string
+}>()
+
+const themeColor = computed(() => props.theme || '#1a73e8')
+
+function getInitial(name?: string): string {
+  if (!name) return '姓'
+  return name.charAt(0)
+}
 </script>
 
 <style scoped>
-.tpl-classic {
-  width: 820px;
-  min-height: 1160px;
-  background: #fff;
-  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-  font-size: 14px;
-  color: #333;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  overflow: hidden;
+.template2-resume {
+  width: 794px;
+  min-height: 942px;
+  margin-bottom: 60px;
+  box-shadow: 0px 2px 4px 1px rgba(0, 0, 0, 0.15);
 }
 
-/* ---- 头部 ---- */
-.tpl-header {
-  background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #5e97f6 100%);
-  padding: 36px 48px 28px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.tpl-header::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 50%;
-}
-.tpl-header::after {
-  content: '';
-  position: absolute;
-  bottom: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  height: 120px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 50%;
-}
-.tpl-name {
-  font-size: 34px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 4px;
-  margin-bottom: 12px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.tpl-contact {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  font-size: 12.5px;
-  color: rgba(255,255,255,0.92);
-  flex-wrap: wrap;
-}
-.tpl-contact span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+@media (max-width: 794px) {
+  .template2-resume {
+    width: 100%;
+  }
 }
 
-/* ---- 主体 ---- */
-.tpl-body {
-  padding: 28px 48px 40px;
+@media print {
+  @page {
+    size: A4;
+  }
+
+  .template2-resume {
+    width: 100%;
+    box-shadow: none;
+  }
 }
 
-/* ---- 通用区块标题 ---- */
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1a73e8;
-  border-bottom: 2px solid #1a73e8;
-  padding-bottom: 6px;
-  margin-bottom: 14px;
-  margin-top: 0;
-  display: flex;
-  align-items: center;
-  letter-spacing: 0.5px;
-}
-.tpl-section {
-  margin-bottom: 24px;
-}
+.template2-resume {
+  .basic-info {
+    padding: 18px 24px 12px 24px;
+  }
 
-/* ---- 时间线 ---- */
-.timeline {
-  position: relative;
-  padding-left: 16px;
-}
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  background: linear-gradient(to bottom, #1a73e8, #4285f4);
-  border-radius: 2px;
-}
-.timeline-item {
-  position: relative;
-  padding-left: 20px;
-  margin-bottom: 16px;
-}
-.timeline-item:last-child { margin-bottom: 0; }
-.timeline-dot {
-  position: absolute;
-  left: -8px;
-  top: 5px;
-  width: 10px;
-  height: 10px;
-  background: #fff;
-  border: 2.5px solid #1a73e8;
-  border-radius: 50%;
-  z-index: 1;
-}
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 3px;
-}
-.item-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-.item-date {
-  font-size: 11.5px;
-  color: #999;
-  white-space: nowrap;
-  margin-left: 12px;
-}
-.item-sub {
-  font-size: 12.5px;
-  color: #666;
-  margin-bottom: 3px;
-}
-.item-desc {
-  font-size: 12.5px;
-  color: #555;
-  line-height: 1.65;
-  margin-top: 3px;
-}
-.item-achievement {
-  font-size: 12px;
-  color: #2e7d32;
-  margin-top: 4px;
-  background: #e8f5e9;
-  border-radius: 4px;
-  padding: 3px 8px;
-  display: inline-block;
-  font-weight: 500;
-}
+  .main-info {
+    padding: 0 24px 24px;
+    background: #fff;
+  }
 
-/* ---- 技能标签 ---- */
-.skill-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.skill-tag {
-  background: linear-gradient(135deg, #e8f0fe, #d2e3fc);
-  color: #1a56db;
-  border: 1px solid #c2d9f8;
-  border-radius: 16px;
-  padding: 4px 14px;
-  font-size: 12.5px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
+  .section-title {
+    font-size: 16px;
+    line-height: 18px;
+    margin-bottom: 8px;
+    letter-spacing: 0;
+    position: relative;
 
-/* ---- 自我评价 ---- */
-.summary-content {
-  font-size: 13.5px;
-  color: #555;
-  line-height: 1.8;
-  background: #f8f9fb;
-  border-left: 3px solid #1a73e8;
-  padding: 10px 14px;
-  border-radius: 0 6px 6px 0;
+    display: flex;
+    .title {
+      width: auto;
+    }
+    .title-addon {
+      flex: 1;
+      position: relative;
+    }
+
+    .title-addon::after {
+      content: ' ';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      left: 16px;
+      height: 1px;
+      transform: translateY(-1px);
+      background-color: currentColor;
+      opacity: 0.54;
+    }
+  }
+
+  .basic-info .section {
+    border-radius: 0;
+  }
+
+  .section {
+    &:not(:first-of-type) {
+      margin-top: 12px;
+    }
+
+    .section-info {
+      font-size: 14px;
+      line-height: 16px;
+      color: rgba(0, 0, 0, 0.85);
+      margin-bottom: 4px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  .basic-info section .section-info {
+    .info-name {
+      max-width: 198px;
+      padding-right: 4px;
+    }
+  }
+
+  .basic-info .avatar-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .basic-info .avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid #e8e8e8;
+  }
+
+  .basic-info .avatar.circle {
+    border-radius: 50%;
+  }
+
+  .basic-info .avatar.square {
+    border-radius: 4px;
+  }
+
+  .basic-info .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .basic-info .avatar-placeholder {
+    font-size: 24px;
+    color: #999;
+  }
+
+  .basic-info .name {
+    margin: 0 0 8px 4px;
+    font-size: 24px;
+    line-height: 36px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  .basic-info .profile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap-reverse;
+
+    margin-bottom: 12px;
+
+    > div:first-of-type {
+      flex: 1;
+    }
+    > div:nth-of-type(2) {
+      width: 150px;
+    }
+
+    .profile-list {
+      display: flex;
+      flex-wrap: wrap;
+      margin-left: 4px;
+
+      > div {
+        flex: 220px 1;
+        display: flex;
+        align-items: center;
+        margin-right: 12px;
+        margin-bottom: 4px;
+      }
+
+      svg {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .basic-info .section-skill {
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+  }
+
+  .basic-info section .sub-info {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .basic-info .education-item {
+    &:not(:first-of-type) {
+      margin-top: 8px;
+    }
+  }
+
+  .main-info section {
+    margin-bottom: 16px;
+
+    .section-detail {
+      letter-spacing: 1.2px;
+
+      &:not(:first-of-type) {
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .main-info .section-project,
+  .main-info .section-work-exp {
+    .section-item:not(:first-of-type) {
+      margin-top: 10px;
+    }
+
+    .section-info .sub-info,
+    .section-info .info-time {
+      color: rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+      margin-left: 8px;
+      font-weight: 300;
+    }
+
+    .work-description,
+    .project-content {
+      white-space: pre-wrap;
+      font-size: 12px;
+      line-height: 1.6;
+      color: rgba(0, 0, 0, 0.65);
+      margin-top: 4px;
+    }
+  }
 }
 </style>

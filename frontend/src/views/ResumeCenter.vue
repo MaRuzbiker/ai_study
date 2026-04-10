@@ -107,8 +107,10 @@
     </el-card>
 
     <!-- 预览对话框 -->
-    <el-dialog v-model="previewVisible" title="简历预览" width="700px" destroy-on-close>
-      <div v-if="previewData" class="resume-preview" v-html="renderPreview(previewData.content)"></div>
+    <el-dialog v-model="previewVisible" title="简历预览" width="800px" destroy-on-close>
+      <div v-if="previewData" class="resume-preview">
+        <ResumePreview :data="JSON.parse(previewData.content)" />
+      </div>
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>
         <el-button type="primary" @click="doPrint">导出 PDF</el-button>
@@ -123,6 +125,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { View, Edit, Delete, Plus, Loading } from '@element-plus/icons-vue'
 import { getMyResumes, deleteResume } from '@/api/resume'
+import ResumePreview from './ResumePreview.vue'
 
 const router = useRouter()
 const resumes = ref<any[]>([])
@@ -138,30 +141,7 @@ const stats = computed(() => {
 
 const formatDate = (dateStr: string) => dateStr ? dateStr.substring(0, 10) : ''
 
-const renderPreview = (content: string) => {
-  try {
-    const data = typeof content === 'string' ? JSON.parse(content) : content
-    let html = '<div class="preview-resume">'
-    html += '<h2 style="text-align:center;margin-bottom:20px;">' + (data.personal?.name || '未填写姓名') + '</h2>'
-    html += '<p style="text-align:center;color:#666;">' + [data.personal?.phone, data.personal?.email, data.personal?.targetPosition].filter(Boolean).join(' | ') + '</p>'
-    if (data.summary) html += '<p style="margin:16px 0;"><strong>自我评价：</strong>' + data.summary + '</p>'
-    if (data.education?.length) {
-      html += '<h3>教育背景</h3>'
-      data.education.forEach((e: any) => { html += '<p>' + e.school + ' | ' + e.degree + ' | ' + e.major + '</p>' })
-    }
-    if (data.experience?.length) {
-      html += '<h3>工作经历</h3>'
-      data.experience.forEach((e: any) => { html += '<p><strong>' + e.company + '</strong> - ' + e.position + '<br/>' + e.description + '</p>' })
-    }
-    if (data.projects?.length) {
-      html += '<h3>项目经历</h3>'
-      data.projects.forEach((p: any) => { html += '<p><strong>' + p.name + '</strong> - ' + p.role + '<br/>' + p.description + '</p>' })
-    }
-    if (data.skills?.length) html += '<h3>技能证书</h3><p>' + (Array.isArray(data.skills) ? data.skills.join('、') : data.skills) + '</p>'
-    html += '</div>'
-    return html
-  } catch { return '<pre style="white-space:pre-wrap;">' + content + '</pre>' }
-}
+// 预览功能已通过ResumePreview组件实现
 
 const previewResume = (item: any) => { previewData.value = item; previewVisible.value = true }
 const doPrint = () => window.print()

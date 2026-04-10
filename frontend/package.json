@@ -14,11 +14,15 @@
     "docx": "^9.6.1",
     "echarts": "^6.0.0",
     "element-plus": "^2.3.8",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "pdf-parse": "^2.4.5",
+    "pinia": "^3.0.4",
     "vue": "^3.3.4",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.2.4",
+    "vuedraggable": "^4.1.0",
     "vuex": "^4.1.0"
   },
   "devDependencies": {

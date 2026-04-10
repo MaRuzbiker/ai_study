@@ -166,11 +166,79 @@ const handleRegenerate = () => handleGenerate()
 const handleSave = async () => {
   if (!generated.value) { ElMessage.warning('请先生成简历'); return }
   try {
+    // 创建符合ResumeConfig格式的内容
+    const resumeConfig = {
+      profile: {
+        name: basicForm.userName,
+        gender: basicForm.gender,
+        mobile: basicForm.phone,
+        email: basicForm.email,
+        positionTitle: basicForm.targetPosition,
+        workExpYear: basicForm.workYears
+      },
+      aboutme: {
+        aboutme_desc: basicForm.selfEvaluation || ''
+      },
+      educationList: [],
+      workExpList: [],
+      projectList: [],
+      skillList: [],
+      awardList: [],
+      workList: [],
+      templateId: 1,
+      sectionOrder: ['summary', 'education', 'experience', 'projects', 'awards', 'certificates', 'skills'],
+      theme: {
+        color: '#2f5785',
+        tagColor: '#2f5785'
+      }
+    }
+
+    // 解析工作经历
+    if (basicForm.workExperience) {
+      const workExpItems = basicForm.workExperience.split('\n').filter(item => item.trim())
+      workExpItems.forEach(item => {
+        resumeConfig.workExpList.push({
+          company_name: item,
+          department_name: '',
+          work_desc: '',
+          work_time: null
+        })
+      })
+    }
+
+    // 解析项目经历
+    if (basicForm.projects) {
+      const projectItems = basicForm.projects.split('\n').filter(item => item.trim())
+      projectItems.forEach(item => {
+        resumeConfig.projectList.push({
+          project_name: item,
+          project_role: '',
+          project_desc: '',
+          project_content: '',
+          project_time: null
+        })
+      })
+    }
+
+    // 解析技能
+    if (basicForm.skills) {
+      const skillItems = basicForm.skills.split(',').map(item => item.trim()).filter(item => item)
+      skillItems.forEach(item => {
+        resumeConfig.skillList.push({
+          skill_name: item,
+          skill_level: 3,
+          skill_desc: ''
+        })
+      })
+    }
+
     const payload = {
       title: basicForm.userName + ' - ' + (basicForm.targetPosition || '简历'),
       status: 'VISIBLE',
-      content: isJsonResult.value ? generatedContent.value : JSON.stringify({ raw: generatedContent.value, personal: { name: basicForm.userName, gender: basicForm.gender, phone: basicForm.phone, email: basicForm.email, targetPosition: basicForm.targetPosition }, summary: basicForm.selfEvaluation })
+      templateId: 1,
+      content: JSON.stringify(resumeConfig)
     }
+
     const res = await saveResume(payload)
     if (res.code === 0) {
       ElMessage.success('简历已保存！')

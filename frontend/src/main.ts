@@ -8,6 +8,8 @@ import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
 import './styles/index.css';
+import './styles/resume-print.css';
+import { createPinia } from 'pinia';
 
 const app = createApp(App);
 
@@ -18,6 +20,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(router);
 app.use(store);
+app.use(createPinia());
 app.use(ElementPlus);
 app.mount('#app');
 

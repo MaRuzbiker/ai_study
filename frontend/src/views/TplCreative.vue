@@ -53,6 +53,70 @@
         </div>
       </div>
 
+      <!-- 校园经历 -->
+      <div v-if="data.campusExperiences && data.campusExperiences.length" class="section-block">
+        <div class="sec-header">
+          <span class="sec-icon">🎭</span>
+          <span class="sec-title">校园经历</span>
+          <span class="sec-line"></span>
+        </div>
+        <div class="timeline">
+          <div v-for="(c, idx) in data.campusExperiences" :key="idx" class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-content">
+              <div class="item-header"><span class="item-title">{{ c.organization }}</span><span class="item-date green-text">{{ c.startDate }} — {{ c.endDate || '至今' }}</span></div>
+              <div class="item-sub">{{ c.role }}</div>
+              <div v-if="c.description" class="item-desc">{{ c.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 竞赛经历 -->
+      <div v-if="data.competitions && data.competitions.length" class="section-block">
+        <div class="sec-header">
+          <span class="sec-icon">🏅</span>
+          <span class="sec-title">竞赛经历</span>
+          <span class="sec-line"></span>
+        </div>
+        <div class="timeline">
+          <div v-for="(comp, idx) in data.competitions" :key="idx" class="timeline-item">
+            <div class="timeline-dot green"></div>
+            <div class="timeline-content">
+              <div class="item-header"><span class="item-title">{{ comp.name }}</span><span class="item-date green-text">{{ comp.date }}</span></div>
+              <div v-if="comp.level" class="item-sub">{{ comp.level }} · {{ comp.rank || '' }}</div>
+              <div v-if="comp.description" class="item-desc">{{ comp.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 荣誉奖励 -->
+      <div v-if="data.awards && data.awards.length" class="section-block section-skills">
+        <div class="sec-header">
+          <span class="sec-icon">🏆</span>
+          <span class="sec-title">荣誉奖励</span>
+          <span class="sec-line"></span>
+        </div>
+        <div class="awards-wrap">
+          <span v-for="(aw, idx) in data.awards" :key="idx" class="award-badge">
+            {{ aw.name }}<span v-if="aw.level" class="aw-lv"> {{ aw.level }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 证书 -->
+      <div v-if="data.certificates && data.certificates.length" class="section-block section-skills">
+        <div class="sec-header">
+          <span class="sec-icon">📜</span>
+          <span class="sec-title">证书资质</span>
+          <span class="sec-line"></span>
+        </div>
+        <div class="skills-wrap">
+          <span v-for="(cert, idx) in data.certificates" :key="idx" class="skill-badge">{{ cert.name }}</span>
+        </div>
+      </div>
+
       <!-- 工作经历 -->
       <div v-if="data.experience && data.experience.length" class="section-block">
         <div class="sec-header">
@@ -327,4 +391,20 @@ defineProps<{ data: Record<string, any> }>()
   letter-spacing: 0.3px;
   box-shadow: 0 1px 3px rgba(46,125,50,0.1);
 }
+
+/* 荣誉奖励 */
+.awards-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+.award-badge {
+  background: linear-gradient(135deg, #fff9c4, #fff59d);
+  color: #f57f17;
+  border: 1px solid #fdd835;
+  border-radius: 20px;
+  padding: 5px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.aw-lv { font-size: 11px; font-weight: 400; color: #f9a825; }
 </style>

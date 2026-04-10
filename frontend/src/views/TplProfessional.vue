@@ -98,6 +98,44 @@
         </div>
       </div>
 
+      <!-- 校园经历 -->
+      <div v-if="data.campusExperiences && data.campusExperiences.length" class="main-section">
+        <div class="main-sec-title">校园经历</div>
+        <div v-for="(c, idx) in data.campusExperiences" :key="idx" class="main-item">
+          <div class="main-item-header"><span class="main-item-title">{{ c.organization }}</span><span class="main-item-date">{{ c.startDate }} — {{ c.endDate || '至今' }}</span></div>
+          <div class="main-item-sub">{{ c.role }}</div>
+          <div v-if="c.description" class="main-item-desc">{{ c.description }}</div>
+        </div>
+      </div>
+
+      <!-- 竞赛经历 -->
+      <div v-if="data.competitions && data.competitions.length" class="main-section">
+        <div class="main-sec-title">竞赛经历</div>
+        <div v-for="(comp, idx) in data.competitions" :key="idx" class="main-item">
+          <div class="main-item-header"><span class="main-item-title">{{ comp.name }}</span><span class="main-item-date">{{ comp.date }}</span></div>
+          <div v-if="comp.level" class="main-item-sub">{{ comp.level }} · {{ comp.rank || '' }}</div>
+          <div v-if="comp.description" class="main-item-desc">{{ comp.description }}</div>
+        </div>
+      </div>
+
+      <!-- 荣誉奖励 -->
+      <div v-if="data.awards && data.awards.length" class="main-section">
+        <div class="main-sec-title">荣誉奖励</div>
+        <div v-for="(aw, idx) in data.awards" :key="idx" class="main-award-item">
+          <span class="main-award-name">{{ aw.name }}</span>
+          <span v-if="aw.date" class="main-award-date">{{ aw.date }}</span>
+          <span v-if="aw.level" class="main-award-level">{{ aw.level }}</span>
+        </div>
+      </div>
+
+      <!-- 证书 -->
+      <div v-if="data.certificates && data.certificates.length" class="main-section">
+        <div class="main-sec-title">证书资质</div>
+        <div class="main-cert-list">
+          <span v-for="(cert, idx) in data.certificates" :key="idx" class="main-cert-badge">{{ cert.name }}<span v-if="cert.date" class="cert-date"> · {{ cert.date }}</span></span>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -328,4 +366,36 @@ defineProps<{ data: Record<string, any> }>()
   font-weight: 500;
 }
 .ach-icon { margin-right: 4px; }
+/* 校园/竞赛经历 */
+.main-sec-title { font-size: 14px; font-weight: 700; color: #263238; margin-bottom: 12px; border-bottom: 2px solid #ff6b35; padding-bottom: 5px; letter-spacing: 0.5px; }
+.main-item { margin-bottom: 12px; }
+.main-item-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.main-item-title { font-size: 13.5px; font-weight: 700; color: #263238; }
+.main-item-date { font-size: 11px; color: #999; white-space: nowrap; }
+.main-item-sub { font-size: 12px; color: #607d8b; font-style: italic; margin-bottom: 3px; }
+.main-item-desc { font-size: 12.5px; color: #555; line-height: 1.6; }
+/* 荣誉奖励 */
+.main-award-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px dashed #e0e0e0;
+  font-size: 12px;
+}
+.main-award-item:last-child { border-bottom: none; }
+.main-award-name { flex: 1; color: #333; font-size: 12.5px; }
+.main-award-date { color: #999; font-size: 11px; }
+.main-award-level { color: #ff6b35; font-size: 10.5px; background: #fff3e0; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+/* 证书 */
+.main-cert-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.main-cert-badge {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
 </style>

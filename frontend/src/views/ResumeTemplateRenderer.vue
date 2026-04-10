@@ -1,14 +1,14 @@
 <template>
-  <component :is="templateComponent" :data="data" />
+  <component :is="templateComponent" :data="data" :theme="data.theme" />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import TplClassic from './TplClassic.vue'
-import TplProfessional from './TplProfessional.vue'
-import TplCreative from './TplCreative.vue'
-import TplTech from './TplTech.vue'
-import TplMinimal from './TplMinimal.vue'
+import TplModern from './TplModern.vue'
+import TplClassicNew from './TplClassicNew.vue'
+import TplSimple from './TplSimple.vue'
+import TplCard from './TplCard.vue'
+import TplBusiness from './TplBusiness.vue'
 
 const props = defineProps<{
   templateId: number | null
@@ -16,14 +16,14 @@ const props = defineProps<{
 }>()
 
 const templateMap: Record<number, any> = {
-  1: TplClassic,
-  2: TplProfessional,
-  3: TplCreative,
-  4: TplTech,
-  5: TplMinimal,
+  1: TplModern,
+  2: TplClassicNew,
+  3: TplSimple,
+  4: TplCard,
+  5: TplBusiness,
 }
 
 const templateComponent = computed(() => {
-  return templateMap[props.templateId || 1] || TplClassic
+  return templateMap[props.templateId || 1] || TplModern
 })
 </script>
